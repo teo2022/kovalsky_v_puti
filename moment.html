@@ -1,0 +1,1193 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Дневник путешественника от Ковальского</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f0f2f5; }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        .fade-in { animation: fadeIn 0.3s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .slide-up { animation: slideUp 0.3s ease-out; }
+        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+        
+        .custom-scroll::-webkit-scrollbar { width: 6px; }
+        .custom-scroll::-webkit-scrollbar-track { background: #f1f1f1; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+        .custom-scroll::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        .gradient-blue { background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); }
+        .gradient-blue-light { background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%); }
+        .gradient-green { background: linear-gradient(135deg, #22c55e 0%, #15803d 100%); }
+        .gradient-green-light { background: linear-gradient(135deg, #4ade80 0%, #22c55e 100%); }
+        .gradient-yellow { background: linear-gradient(135deg, #eab308 0%, #a16207 100%); }
+        .gradient-purple { background: linear-gradient(135deg, #a855f7 0%, #7c3aed 100%); }
+        .gradient-orange { background: linear-gradient(135deg, #f97316 0%, #c2410c 100%); }
+        .gradient-pink { background: linear-gradient(135deg, #ec4899 0%, #be185d 100%); }
+        .gradient-cyan { background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%); }
+        .gradient-red { background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%); }
+        
+        .timeline-item { transition: all 0.2s ease; }
+        .timeline-item:hover { transform: translateX(4px); }
+        .waypoint-card { transition: all 0.2s ease; }
+        .waypoint-card:hover { transform: translateY(-2px); box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1); }
+        .export-card { transition: all 0.2s ease; }
+        .export-card:hover { transform: translateY(-2px); box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1); }
+        
+        .toast { animation: toastIn 0.3s ease-out, toastOut 0.3s ease-in 2.7s; }
+        @keyframes toastIn { from { transform: translateY(100px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @keyframes toastOut { from { transform: translateY(0); opacity: 1; } to { transform: translateY(100px); opacity: 0; } }
+
+        .tag-checkbox:checked + span { background-color: #3b82f6; color: white; }
+        
+        .pulse-dot { animation: pulse 2s infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(1.2); } }
+
+        .nav-item-active { color: #2563eb; }
+        .nav-item-inactive { color: #9ca3af; }
+
+        .ritual-card { transition: all 0.3s ease; }
+        .ritual-card:hover { transform: scale(1.02); }
+        .ritual-card.selected { ring: 4px; ring-color: #3b82f6; background-color: #eff6ff; }
+    </style>
+</head>
+<body class="h-screen flex flex-col overflow-hidden">
+
+    <!-- App Container -->
+    <div id="app" class="flex-1 flex flex-col h-full max-w-lg mx-auto w-full bg-white shadow-2xl relative overflow-hidden">
+        
+        <!-- Dynamic Header -->
+        <header id="app-header" class="gradient-blue text-white p-6 pb-8 rounded-b-3xl shadow-lg z-10 transition-all">
+            <div class="flex items-center gap-3 mb-4">
+                <button onclick="goBack()" class="bg-white/20 hover:bg-white/30 backdrop-blur-sm p-2.5 rounded-xl transition-all">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                    </svg>
+                </button>
+                <div class="flex-1">
+                    <p class="text-blue-200 text-xs font-medium uppercase tracking-wider mb-1" id="header-subtitle">Дневник путешественника</p>
+                    <h1 class="text-xl font-bold" id="header-title">от Ковальского</h1>
+                </div>
+                <button onclick="openSettings()" class="bg-white/20 hover:bg-white/30 backdrop-blur-sm p-2.5 rounded-xl transition-all">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    </svg>
+                </button>
+            </div>
+            
+            <!-- Quick Stats (Dashboard) -->
+            <div id="header-stats" class="flex gap-3 mt-4">
+                <div class="bg-white/10 backdrop-blur-sm rounded-xl px-4 py-2 flex-1">
+                    <p class="text-blue-200 text-xs">Маршрутов</p>
+                    <p class="text-xl font-bold" id="stat-routes">0</p>
+                </div>
+                <div class="bg-white/10 backdrop-blur-sm rounded-xl px-4 py-2 flex-1">
+                    <p class="text-blue-200 text-xs">Заметок</p>
+                    <p class="text-xl font-bold" id="stat-notes">0</p>
+                </div>
+                <div class="bg-white/10 backdrop-blur-sm rounded-xl px-4 py-2 flex-1">
+                    <p class="text-blue-200 text-xs">Ритуалов</p>
+                    <p class="text-xl font-bold" id="stat-rituals">0</p>
+                </div>
+            </div>
+
+            <!-- GPS Status (Active Route) -->
+            <div id="gps-status" class="hidden bg-white/20 backdrop-blur-sm rounded-xl p-3 mt-3">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <div class="w-2 h-2 bg-green-400 rounded-full pulse-dot"></div>
+                        <span class="text-xs font-medium">GPS активен</span>
+                    </div>
+                    <span class="text-xs" id="gps-coords">--° --°</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Dynamic Content Area -->
+        <main id="main-view" class="flex-1 overflow-y-auto custom-scroll relative bg-gray-50">
+            <!-- Dynamic Content -->
+        </main>
+
+        <!-- Bottom Navigation -->
+        <nav id="bottom-nav" class="absolute bottom-0 w-full bg-white border-t border-gray-100 flex justify-around items-center py-3 px-2 z-20">
+            <button onclick="navigateTo('dashboard')" class="nav-btn flex flex-col items-center gap-1 nav-item-active w-16" id="nav-dashboard">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+                </svg>
+                <span class="text-[10px] font-medium">Главная</span>
+            </button>
+            <button onclick="navigateTo('rituals')" class="nav-btn flex flex-col items-center gap-1 nav-item-inactive w-16" id="nav-rituals">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                </svg>
+                <span class="text-[10px] font-medium">Ритуалы</span>
+            </button>
+            <button onclick="navigateTo('export')" class="nav-btn flex flex-col items-center gap-1 nav-item-inactive w-16" id="nav-export">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                </svg>
+                <span class="text-[10px] font-medium">Экспорт</span>
+            </button>
+        </nav>
+
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-24 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white px-6 py-3 rounded-xl shadow-lg z-50 hidden toast">
+        <span id="toast-message">Сохранено!</span>
+    </div>
+
+    <!-- ==================== SPONTANEOUS RITUAL MODAL ==================== -->
+    <div id="ritual-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-end sm:items-center justify-center backdrop-blur-sm">
+        <div class="bg-white w-full max-w-md rounded-t-3xl sm:rounded-2xl p-0 shadow-2xl transform transition-transform duration-300 translate-y-full sm:translate-y-0 slide-up max-h-[95vh] overflow-hidden flex flex-col">
+            <!-- Modal Header -->
+            <div class="gradient-yellow p-4 flex justify-between items-center flex-shrink-0">
+                <div class="flex items-center gap-2">
+                    <div class="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center text-white text-xl">⚡</div>
+                    <div>
+                        <h3 class="text-lg font-bold text-white">Спонтанный момент</h3>
+                        <p class="text-xs text-yellow-100">Выберите категорию и заполните поля</p>
+                    </div>
+                </div>
+                <button onclick="closeRitualModal()" class="text-white/80 hover:text-white p-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Modal Body -->
+            <div class="flex-1 overflow-y-auto custom-scroll p-4">
+                <form onsubmit="handleRitualSubmit(event)" class="space-y-4">
+                    
+                    <!-- Category Selection -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-3">Категория момента *</label>
+                        <div class="grid grid-cols-2 gap-2" id="ritual-categories">
+                            <!-- Categories injected via JS -->
+                        </div>
+                    </div>
+
+                    <!-- Location Field (Always Visible) -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">📍 Где это было?</label>
+                        <div class="flex gap-2">
+                            <input type="text" id="ritual-location" required placeholder="Название места" class="flex-1 border border-gray-300 rounded-xl p-3.5 text-sm focus:ring-2 focus:ring-yellow-500 outline-none">
+                            <button type="button" onclick="getRitualLocation()" class="bg-yellow-100 text-yellow-600 p-3.5 rounded-xl hover:bg-yellow-200 transition-colors">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Dynamic Fields Container -->
+                    <div id="ritual-dynamic-fields" class="space-y-3">
+                        <!-- Fields injected via JS based on category -->
+                    </div>
+
+                    <!-- General Notes -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">💭 Ваши впечатления</label>
+                        <textarea id="ritual-notes" rows="3" placeholder="Что почувствовали? Что запомнилось?" class="w-full border border-gray-300 rounded-xl p-3.5 text-sm focus:ring-2 focus:ring-yellow-500 outline-none resize-none"></textarea>
+                    </div>
+
+                    <!-- Tags -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">🏷️ Теги</label>
+                        <div class="flex flex-wrap gap-2" id="ritual-tags">
+                            <label class="cursor-pointer"><input type="checkbox" name="ritual-tags" value="#спонтан" class="tag-checkbox sr-only"><span class="inline-block px-3 py-1.5 bg-gray-100 text-gray-700 text-xs font-medium rounded-full">#спонтан</span></label>
+                            <label class="cursor-pointer"><input type="checkbox" name="ritual-tags" value="#гайд" class="tag-checkbox sr-only"><span class="inline-block px-3 py-1.5 bg-gray-100 text-gray-700 text-xs font-medium rounded-full">#гайд</span></label>
+                            <label class="cursor-pointer"><input type="checkbox" name="ritual-tags" value="#идея" class="tag-checkbox sr-only"><span class="inline-block px-3 py-1.5 bg-gray-100 text-gray-700 text-xs font-medium rounded-full">#идея</span></label>
+                            <label class="cursor-pointer"><input type="checkbox" name="ritual-tags" value="#рекомендую" class="tag-checkbox sr-only"><span class="inline-block px-3 py-1.5 bg-gray-100 text-gray-700 text-xs font-medium rounded-full">#рекомендую</span></label>
+                            <label class="cursor-pointer"><input type="checkbox" name="ritual-tags" value="#не-рекомендую" class="tag-checkbox sr-only"><span class="inline-block px-3 py-1.5 bg-gray-100 text-gray-700 text-xs font-medium rounded-full">#не-рекомендую</span></label>
+                        </div>
+                    </div>
+
+                    <!-- Link to Route -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">📎 Привязать к маршруту</label>
+                        <select id="ritual-route" class="w-full border border-gray-300 rounded-xl p-3.5 text-sm bg-white">
+                            <option value="">Не привязывать</option>
+                        </select>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <button type="submit" class="w-full gradient-yellow text-white font-bold py-4 rounded-xl shadow-lg hover:shadow-xl transform active:scale-[0.98] transition-all">
+                        ✨ Сохранить момент
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== OTHER MODALS (Simplified for brevity) ==================== -->
+    
+    <!-- Create Route Modal -->
+    <div id="create-route-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-end sm:items-center justify-center backdrop-blur-sm">
+        <div class="bg-white w-full max-w-md rounded-t-3xl sm:rounded-2xl p-6 shadow-2xl transform transition-transform duration-300 translate-y-full sm:translate-y-0 slide-up">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-lg font-bold text-gray-900">Новый маршрут</h3>
+                <button onclick="closeCreateRouteModal()" class="text-gray-400 hover:text-gray-600 p-2">✕</button>
+            </div>
+            <form onsubmit="handleCreateRoute(event)" class="space-y-4">
+                <input type="text" id="create-title" required placeholder="Название поездки" class="w-full border border-gray-300 rounded-xl p-3.5 text-sm">
+                <input type="text" id="create-date" required placeholder="Дата / Период" class="w-full border border-gray-300 rounded-xl p-3.5 text-sm">
+                <div class="grid grid-cols-3 gap-3">
+                    <label class="cursor-pointer"><input type="radio" name="route-type" value="planned" class="peer sr-only" checked><div class="border-2 border-gray-200 rounded-xl p-3 text-center peer-checked:border-blue-500 peer-checked:bg-blue-50"><div class="text-2xl">🔵</div><div class="text-xs">План</div></div></label>
+                    <label class="cursor-pointer"><input type="radio" name="route-type" value="active" class="peer sr-only"><div class="border-2 border-gray-200 rounded-xl p-3 text-center peer-checked:border-green-500 peer-checked:bg-green-50"><div class="text-2xl">🟢</div><div class="text-xs">В пути</div></div></label>
+                    <label class="cursor-pointer"><input type="radio" name="route-type" value="spontaneous" class="peer sr-only"><div class="border-2 border-gray-200 rounded-xl p-3 text-center peer-checked:border-yellow-500 peer-checked:bg-yellow-50"><div class="text-2xl">🟡</div><div class="text-xs">Спонтан</div></div></label>
+                </div>
+                <button type="submit" class="w-full gradient-blue text-white font-bold py-4 rounded-xl shadow-lg">Создать</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Export Result Modal -->
+    <div id="export-result-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-end sm:items-center justify-center backdrop-blur-sm">
+        <div class="bg-white w-full max-w-md rounded-t-3xl sm:rounded-2xl p-6 shadow-2xl transform transition-transform duration-300 translate-y-full sm:translate-y-0 slide-up max-h-[90vh] overflow-hidden flex flex-col">
+            <div class="flex justify-between items-center mb-4 flex-shrink-0">
+                <h3 class="text-lg font-bold text-gray-900" id="export-result-title">Результат</h3>
+                <button onclick="closeExportResult()" class="text-gray-400 hover:text-gray-600 p-2">✕</button>
+            </div>
+            <div class="flex-1 overflow-y-auto custom-scroll mb-4">
+                <div id="export-result-content" class="bg-gray-900 text-green-400 p-4 rounded-xl text-xs font-mono whitespace-pre-wrap"></div>
+            </div>
+            <div class="flex gap-3 flex-shrink-0">
+                <button onclick="copyExportResult()" class="flex-1 gradient-blue text-white font-bold py-3 rounded-xl">📋 Копировать</button>
+                <button onclick="downloadExportResult()" class="flex-1 bg-gray-800 text-white font-bold py-3 rounded-xl">💾 Скачать</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settings-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-end sm:items-center justify-center backdrop-blur-sm">
+        <div class="bg-white w-full max-w-md rounded-t-3xl sm:rounded-2xl p-6 shadow-2xl transform transition-transform duration-300 translate-y-full sm:translate-y-0 slide-up">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-lg font-bold text-gray-900">Настройки</h3>
+                <button onclick="closeSettings()" class="text-gray-400 hover:text-gray-600 p-2">✕</button>
+            </div>
+            <button onclick="resetAllData()" class="w-full bg-red-100 text-red-700 font-medium py-3 rounded-xl hover:bg-red-200 transition-colors mb-4">🗑️ Сбросить все данные</button>
+            <div class="text-center text-xs text-gray-400">Дневник путешественника от Ковальского v2.0</div>
+        </div>
+    </div>
+
+    <!-- View Item Modal -->
+    <div id="view-item-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-end sm:items-center justify-center backdrop-blur-sm">
+        <div class="bg-white w-full max-w-md rounded-t-3xl sm:rounded-2xl p-6 shadow-2xl transform transition-transform duration-300 translate-y-full sm:translate-y-0 slide-up">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-bold text-gray-900" id="view-item-title">Просмотр</h3>
+                <button onclick="closeViewItemModal()" class="text-gray-400 hover:text-gray-600 p-2">✕</button>
+            </div>
+            <div id="view-item-content" class="text-sm text-gray-700"></div>
+        </div>
+    </div>
+
+    <script>
+        // ==================== STATE MANAGEMENT ====================
+        const STORAGE_KEY = 'kowalski_travel_diary_rituals_v1';
+        
+        let state = { routes: [], rituals: [], customTags: [] };
+        let currentPage = 'dashboard';
+        let currentRouteId = null;
+        let currentRoute = null;
+        let currentTab = 'waypoints';
+        let timelineFilter = 'all';
+        let gpsTracking = false;
+        let gpsInterval = null;
+        let segmentStart = null;
+        let selectedExportTag = 'all';
+        let lastExportContent = '';
+        let dashboardFilter = 'all';
+        
+        // Ritual state
+        let selectedRitualCategory = null;
+        let lastExportRitualContent = '';
+
+        // ==================== RITUAL CATEGORIES CONFIG ====================
+        const RITUAL_CATEGORIES = {
+            food: {
+                id: 'food',
+                icon: '🍽️',
+                name: 'Еда / Кафе',
+                gradient: 'gradient-orange',
+                description: 'Ресторан, кафе, уличная еда',
+                fields: [
+                    { id: 'place_name', label: 'Название заведения', type: 'text', placeholder: 'Кафе "У горы"' },
+                    { id: 'cuisine', label: 'Кухня', type: 'text', placeholder: 'Грузинская, местная...' },
+                    { id: 'dish', label: 'Что пробовали', type: 'text', placeholder: 'Хачапури, хычины...' },
+                    { id: 'price', label: 'Средний чек (₽)', type: 'number', placeholder: '500' },
+                    { id: 'rating', label: 'Оценка', type: 'select', options: ['⭐️⭐️⭐️⭐️⭐️', '⭐️⭐️⭐️⭐️', '⭐️⭐️⭐️', '⭐️⭐️', '⭐️'] },
+                    { id: 'atmosphere', label: 'Атмосфера', type: 'select', options: ['Уютно', 'Шумно', 'Романтично', 'Семейное', 'Быстро'] }
+                ]
+            },
+            accommodation: {
+                id: 'accommodation',
+                icon: '🏨',
+                name: 'Жильё',
+                gradient: 'gradient-blue',
+                description: 'Отель, хостел, глэмпинг',
+                fields: [
+                    { id: 'place_name', label: 'Название', type: 'text', placeholder: 'Отель "Алтай"' },
+                    { id: 'type', label: 'Тип жилья', type: 'select', options: ['Отель', 'Хостел', 'Квартира', 'Глэмпинг', 'Кемпинг', 'Частный дом'] },
+                    { id: 'price', label: 'Цена за ночь (₽)', type: 'number', placeholder: '3000' },
+                    { id: 'comfort', label: 'Комфорт', type: 'select', options: ['Люкс', 'Стандарт', 'Эконом', 'Спартанский'] },
+                    { id: 'cleanliness', label: 'Чистота', type: 'select', options: ['Идеально', 'Хорошо', 'Нормально', 'Плохо'] }
+                ]
+            },
+            transport: {
+                id: 'transport',
+                icon: '🚗',
+                name: 'Транспорт',
+                gradient: 'gradient-green',
+                description: 'Такси, аренда, попутки',
+                fields: [
+                    { id: 'type', label: 'Тип транспорта', type: 'select', options: ['Такси', 'Аренда авто', 'Попутка', 'Автобус', 'Поезд', 'Самолёт'] },
+                    { id: 'route', label: 'Маршрут', type: 'text', placeholder: 'Откуда - Куда' },
+                    { id: 'price', label: 'Стоимость (₽)', type: 'number', placeholder: '1500' },
+                    { id: 'duration', label: 'Время в пути', type: 'text', placeholder: '2 часа' },
+                    { id: 'comfort', label: 'Комфорт', type: 'select', options: ['Отлично', 'Нормально', 'Плохо', 'Экстрим'] }
+                ]
+            },
+            sight: {
+                id: 'sight',
+                icon: '🏛️',
+                name: 'Достопримечательность',
+                gradient: 'gradient-purple',
+                description: 'Музей, вид, памятник',
+                fields: [
+                    { id: 'place_name', label: 'Название', type: 'text', placeholder: 'Перевал Кату-Ярык' },
+                    { id: 'entry_price', label: 'Вход (₽)', type: 'number', placeholder: '0' },
+                    { id: 'visit_duration', label: 'Время посещения', type: 'text', placeholder: '1 час' },
+                    { id: 'crowd', label: 'Людей', type: 'select', options: ['Пусто', 'Мало', 'Средне', 'Много', 'Толпа'] },
+                    { id: 'photo_worthy', label: 'Фотогенично', type: 'select', options: ['📸📸📸', '📸📸', '📸', 'Не очень'] }
+                ]
+            },
+            shopping: {
+                id: 'shopping',
+                icon: '🎁',
+                name: 'Покупки',
+                gradient: 'gradient-pink',
+                description: 'Сувениры, продукты, вещи',
+                fields: [
+                    { id: 'place_name', label: 'Где купили', type: 'text', placeholder: 'Рынок в Горно' },
+                    { id: 'item', label: 'Что купили', type: 'text', placeholder: 'Мёд, орехи...' },
+                    { id: 'price', label: 'Сумма (₽)', type: 'number', placeholder: '500' },
+                    { id: 'for_whom', label: 'Для кого', type: 'text', placeholder: 'Себе, маме, друзьям' },
+                    { id: 'quality', label: 'Качество', type: 'select', options: ['Отличное', 'Хорошее', 'Среднее', 'Плохое'] }
+                ]
+            },
+            insight: {
+                id: 'insight',
+                icon: '💡',
+                name: 'Инсайт / Идея',
+                gradient: 'gradient-yellow',
+                description: 'Мысль, идея для поста',
+                fields: [
+                    { id: 'topic', label: 'Тема инсайта', type: 'text', placeholder: 'О чём мысль?' },
+                    { id: 'insight_text', label: 'Суть инсайта', type: 'textarea', placeholder: 'Подробно опишите мысль...' },
+                    { id: 'action', label: 'Что сделать с этим', type: 'select', options: ['Написать пост', 'Сохранить', 'Развить идею', 'Поделиться'] }
+                ]
+            },
+            photo: {
+                id: 'photo',
+                icon: '📸',
+                name: 'Фото / Видео',
+                gradient: 'gradient-cyan',
+                description: 'Крутой кадр или видео',
+                fields: [
+                    { id: 'location', label: 'Где снято', type: 'text', placeholder: 'Точка съёмки' },
+                    { id: 'subject', label: 'Что в кадре', type: 'text', placeholder: 'Пейзаж, портрет...' },
+                    { id: 'time', label: 'Время суток', type: 'select', options: ['Рассвет', 'Утро', 'День', 'Закат', 'Ночь'] },
+                    { id: 'equipment', label: 'На что снято', type: 'text', placeholder: 'Телефон, камера...' },
+                    { id: 'story', label: 'История кадра', type: 'textarea', placeholder: 'Как сделали этот кадр?' }
+                ]
+            },
+            other: {
+                id: 'other',
+                icon: '📦',
+                name: 'Прочее',
+                gradient: 'gradient-red',
+                description: 'Всё остальное',
+                fields: [
+                    { id: 'title', label: 'Что произошло', type: 'text', placeholder: 'Кратко опишите' },
+                    { id: 'description', label: 'Подробности', type: 'textarea', placeholder: 'Расскажите подробнее...' }
+                ]
+            }
+        };
+
+        // ==================== STORAGE ====================
+        function loadState() {
+            try {
+                const saved = localStorage.getItem(STORAGE_KEY);
+                if (saved) state = JSON.parse(saved);
+                if (!state.rituals) state.rituals = [];
+                if (!state.routes) state.routes = [];
+                if (!state.customTags) state.customTags = [];
+            } catch (e) {
+                state = { routes: [], rituals: [], customTags: [] };
+            }
+        }
+
+        function saveState() {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+                showToast('Сохранено!');
+            } catch (e) {
+                showToast('Ошибка!');
+            }
+        }
+
+        function resetAllData() {
+            if (confirm('Все данные будут удалены!')) {
+                localStorage.removeItem(STORAGE_KEY);
+                state = { routes: [], rituals: [], customTags: [] };
+                init();
+                closeSettings();
+                showToast('Данные сброшены');
+            }
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-message').textContent = message;
+            toast.classList.remove('hidden');
+            setTimeout(() => toast.classList.add('hidden'), 3000);
+        }
+
+        // ==================== NAVIGATION ====================
+        function navigateTo(page) {
+            currentPage = page;
+            currentRouteId = null;
+            currentRoute = null;
+            
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('nav-item-active');
+                btn.classList.add('nav-item-inactive');
+            });
+            const navBtn = document.getElementById(`nav-${page}`);
+            if (navBtn) {
+                navBtn.classList.remove('nav-item-inactive');
+                navBtn.classList.add('nav-item-active');
+            }
+
+            const header = document.getElementById('app-header');
+            const stats = document.getElementById('header-stats');
+            const gpsStatus = document.getElementById('gps-status');
+            
+            header.className = 'gradient-blue text-white p-6 pb-8 rounded-b-3xl shadow-lg z-10 transition-all';
+            document.getElementById('header-subtitle').textContent = 'Дневник путешественника';
+            document.getElementById('header-title').textContent = 'от Ковальского';
+            stats.classList.remove('hidden');
+            gpsStatus.classList.add('hidden');
+
+            const main = document.getElementById('main-view');
+            main.className = 'flex-1 overflow-y-auto custom-scroll relative bg-gray-50 pb-24';
+
+            if (page === 'dashboard') renderDashboard();
+            else if (page === 'rituals') renderRitualsPage();
+            else if (page === 'export') renderExportPage();
+
+            updateStats();
+            stopGPSTracking();
+        }
+
+        function goBack() {
+            if (currentPage === 'route') navigateTo('dashboard');
+            else showToast('Вы на главной');
+        }
+
+        function openSettings() {
+            document.getElementById('settings-modal').classList.remove('hidden');
+            setTimeout(() => document.querySelector('#settings-modal > div').classList.remove('translate-y-full'), 10);
+        }
+
+        function closeSettings() {
+            document.querySelector('#settings-modal > div').classList.add('translate-y-full');
+            setTimeout(() => document.getElementById('settings-modal').classList.add('hidden'), 300);
+        }
+
+        // ==================== DASHBOARD ====================
+        function renderDashboard() {
+            const main = document.getElementById('main-view');
+            
+            let html = `
+                <div class="px-4 mt-4 flex justify-between items-center">
+                    <h2 class="text-lg font-bold text-gray-800">Маршруты</h2>
+                    <button onclick="openCreateRouteModal()" class="gradient-blue text-white px-4 py-2 rounded-lg text-sm font-medium shadow-md">+ Новый</button>
+                </div>
+            `;
+
+            let filteredRoutes = state.routes;
+            if (dashboardFilter !== 'all') {
+                filteredRoutes = state.routes.filter(r => r.type === dashboardFilter);
+            }
+
+            if (filteredRoutes.length === 0) {
+                html += `
+                    <div class="text-center py-16 fade-in px-4">
+                        <div class="w-20 h-20 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-4 text-4xl">🗺️</div>
+                        <h3 class="font-medium text-gray-700 mb-1">Нет маршрутов</h3>
+                        <p class="text-sm text-gray-500 mb-4">Создайте первый маршрут</p>
+                        <button onclick="openCreateRouteModal()" class="gradient-blue text-white px-6 py-2.5 rounded-xl text-sm font-medium shadow-md">+ Создать</button>
+                    </div>
+                `;
+            } else {
+                html += `<div class="p-4 space-y-3 fade-in">`;
+                filteredRoutes.forEach(route => {
+                    const config = getRouteConfig(route.type);
+                    html += `
+                        <div onclick="openRouteDetail('${route.id}')" class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 cursor-pointer hover:shadow-md transition-all">
+                            <div class="flex justify-between items-start">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-12 h-12 ${config.gradient} rounded-xl flex items-center justify-center text-white text-xl">${config.icon}</div>
+                                    <div>
+                                        <h3 class="font-bold text-gray-900">${route.title}</h3>
+                                        <p class="text-sm text-gray-500">${route.date}</p>
+                                    </div>
+                                </div>
+                                <span class="${config.badge} px-2.5 py-1 rounded-lg text-xs font-bold">${config.label}</span>
+                            </div>
+                        </div>
+                    `;
+                });
+                html += `</div>`;
+            }
+
+            main.innerHTML = html;
+        }
+
+        function getRouteConfig(type) {
+            const configs = {
+                planned: { icon: '📋', gradient: 'gradient-blue', badge: 'bg-blue-100 text-blue-700', label: 'План' },
+                active: { icon: '🚗', gradient: 'gradient-green', badge: 'bg-green-100 text-green-700', label: 'В пути' },
+                spontaneous: { icon: '⚡', gradient: 'gradient-yellow', badge: 'bg-yellow-100 text-yellow-700', label: 'Спонтан' }
+            };
+            return configs[type] || configs.planned;
+        }
+
+        function updateStats() {
+            document.getElementById('stat-routes').textContent = state.routes.length;
+            document.getElementById('stat-notes').textContent = state.rituals.length;
+            document.getElementById('stat-rituals').textContent = state.rituals.length;
+        }
+
+        // ==================== RITUALS PAGE ====================
+        function renderRitualsPage() {
+            const main = document.getElementById('main-view');
+            
+            let html = `
+                <div class="px-4 mt-4">
+                    <div class="flex justify-between items-center mb-4">
+                        <div>
+                            <h2 class="text-2xl font-bold text-gray-800">Ритуалы</h2>
+                            <p class="text-sm text-gray-500">Спонтанные моменты по категориям</p>
+                        </div>
+                        <button onclick="openRitualModal()" class="gradient-yellow text-white px-4 py-3 rounded-xl text-sm font-medium shadow-md flex items-center gap-2">
+                            <span class="text-xl">⚡</span> Новый момент
+                        </button>
+                    </div>
+
+                    <!-- Category Filter -->
+                    <div class="flex gap-2 overflow-x-auto hide-scrollbar mb-4 pb-2">
+                        <button onclick="filterRituals('all')" class="px-4 py-2 rounded-full text-xs font-medium whitespace-nowrap ${ritualFilter === 'all' ? 'gradient-yellow text-white' : 'bg-white text-gray-600'}">Все</button>
+                        ${Object.values(RITUAL_CATEGORIES).map(cat => `
+                            <button onclick="filterRituals('${cat.id}')" class="px-4 py-2 rounded-full text-xs font-medium whitespace-nowrap ${ritualFilter === cat.id ? cat.gradient + ' text-white' : 'bg-white text-gray-600'}">${cat.icon} ${cat.name}</button>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+
+            let filteredRituals = state.rituals;
+            if (ritualFilter !== 'all') {
+                filteredRituals = state.rituals.filter(r => r.category === ritualFilter);
+            }
+
+            // Group by date
+            const grouped = {};
+            filteredRituals.forEach(r => {
+                const d = new Date(r.timestamp).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' });
+                if (!grouped[d]) grouped[d] = [];
+                grouped[d].push(r);
+            });
+            const dates = Object.keys(grouped).sort((a,b) => new Date(b) - new Date(a));
+
+            if (dates.length === 0) {
+                html += `
+                    <div class="text-center py-16 px-4 fade-in">
+                        <div class="w-20 h-20 bg-yellow-50 rounded-full flex items-center justify-center mx-auto mb-4 text-4xl">⚡</div>
+                        <h3 class="font-medium text-gray-700 mb-1">Нет ритуалов</h3>
+                        <p class="text-sm text-gray-500 mb-4">Зафиксируйте свой первый спонтанный момент!</p>
+                        <button onclick="openRitualModal()" class="gradient-yellow text-white px-6 py-2.5 rounded-xl text-sm font-medium shadow-md">+ Добавить момент</button>
+                    </div>
+                `;
+            } else {
+                html += `<div class="p-4 space-y-6 fade-in">`;
+                dates.forEach(date => {
+                    html += `<div><h3 class="text-sm font-bold text-gray-500 uppercase mb-3">${date}</h3><div class="space-y-3">`;
+                    grouped[date].forEach(ritual => {
+                        const cat = RITUAL_CATEGORIES[ritual.category];
+                        const routeInfo = ritual.routeId ? `<span class="bg-purple-100 text-purple-700 text-[10px] px-2 py-0.5 rounded-full">📎 Привязано</span>` : '';
+                        
+                        // Build summary from fields
+                        let summary = '';
+                        if (ritual.fields) {
+                            if (ritual.fields.place_name) summary += ritual.fields.place_name;
+                            if (ritual.fields.price) summary += ` • ${ritual.fields.price}₽`;
+                            if (ritual.fields.rating) summary += ` • ${ritual.fields.rating}`;
+                        }
+
+                        html += `
+                            <div onclick="viewRitual('${ritual.id}')" class="ritual-card bg-white p-4 rounded-2xl shadow-sm border-l-4 ${cat ? cat.gradient.replace('gradient-', 'border-') : 'border-yellow-400'} cursor-pointer hover:shadow-md transition-all">
+                                <div class="flex justify-between items-start mb-2">
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-xl">${cat ? cat.icon : '⚡'}</span>
+                                        <span class="text-xs font-medium text-gray-500">${cat ? cat.name : 'Момент'}</span>
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        ${routeInfo}
+                                        <span class="text-xs text-gray-400">${new Date(ritual.timestamp).toLocaleTimeString('ru-RU', {hour:'2-digit',minute:'2-digit'})}</span>
+                                    </div>
+                                </div>
+                                <div class="font-medium text-gray-900 mb-1">📍 ${ritual.location || 'Неизвестно'}</div>
+                                ${summary ? `<div class="text-sm text-gray-600 mb-2">${summary}</div>` : ''}
+                                ${ritual.notes ? `<div class="text-sm text-gray-700 line-clamp-2">${ritual.notes}</div>` : ''}
+                                ${ritual.tags && ritual.tags.length > 0 ? `<div class="flex gap-1 mt-2 flex-wrap">${ritual.tags.map(t => `<span class="bg-gray-100 text-gray-600 text-[10px] px-2 py-0.5 rounded-full">${t}</span>`).join('')}</div>` : ''}
+                            </div>
+                        `;
+                    });
+                    html += `</div></div>`;
+                });
+                html += `</div>`;
+            }
+
+            main.innerHTML = html;
+        }
+
+        let ritualFilter = 'all';
+        function filterRituals(filter) {
+            ritualFilter = filter;
+            renderRitualsPage();
+        }
+
+        // ==================== RITUAL MODAL ====================
+        function openRitualModal() {
+            renderRitualCategories();
+            selectedRitualCategory = null;
+            
+            // Populate route select
+            const select = document.getElementById('ritual-route');
+            select.innerHTML = '<option value="">Не привязывать</option>' + state.routes.map(r => `<option value="${r.id}">${r.title}</option>`).join('');
+            
+            // Reset form
+            document.getElementById('ritual-location').value = '';
+            document.getElementById('ritual-notes').value = '';
+            document.querySelectorAll('input[name="ritual-tags"]').forEach(cb => cb.checked = false);
+            document.getElementById('ritual-dynamic-fields').innerHTML = '';
+            
+            document.getElementById('ritual-modal').classList.remove('hidden');
+            setTimeout(() => document.querySelector('#ritual-modal > div').classList.remove('translate-y-full'), 10);
+        }
+
+        function closeRitualModal() {
+            document.querySelector('#ritual-modal > div').classList.add('translate-y-full');
+            setTimeout(() => document.getElementById('ritual-modal').classList.add('hidden'), 300);
+        }
+
+        function renderRitualCategories() {
+            const container = document.getElementById('ritual-categories');
+            let html = '';
+            Object.values(RITUAL_CATEGORIES).forEach(cat => {
+                const isSelected = selectedRitualCategory === cat.id;
+                html += `
+                    <div onclick="selectRitualCategory('${cat.id}')" class="ritual-card cursor-pointer border-2 ${isSelected ? 'border-blue-500 bg-blue-50' : 'border-gray-200 bg-white'} rounded-xl p-3 text-center transition-all">
+                        <div class="text-3xl mb-1">${cat.icon}</div>
+                        <div class="text-xs font-medium text-gray-700">${cat.name}</div>
+                        <div class="text-[10px] text-gray-400 mt-1">${cat.description}</div>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        function selectRitualCategory(categoryId) {
+            selectedRitualCategory = categoryId;
+            renderRitualCategories();
+            renderRitualFields();
+        }
+
+        function renderRitualFields() {
+            if (!selectedRitualCategory) return;
+            
+            const category = RITUAL_CATEGORIES[selectedRitualCategory];
+            const container = document.getElementById('ritual-dynamic-fields');
+            
+            let html = `<div class="bg-gray-50 rounded-xl p-4 space-y-3">`;
+            html += `<div class="flex items-center gap-2 mb-3"><span class="text-xl">${category.icon}</span><span class="font-medium text-gray-700">${category.name}</span></div>`;
+            
+            category.fields.forEach(field => {
+                if (field.type === 'select') {
+                    html += `
+                        <div>
+                            <label class="block text-xs font-medium text-gray-500 mb-1">${field.label}</label>
+                            <select name="ritual-${field.id}" class="w-full border border-gray-300 rounded-xl p-3 text-sm bg-white">
+                                <option value="">Не выбрано</option>
+                                ${field.options.map(opt => `<option value="${opt}">${opt}</option>`).join('')}
+                            </select>
+                        </div>
+                    `;
+                } else if (field.type === 'textarea') {
+                    html += `
+                        <div>
+                            <label class="block text-xs font-medium text-gray-500 mb-1">${field.label}</label>
+                            <textarea name="ritual-${field.id}" rows="2" placeholder="${field.placeholder}" class="w-full border border-gray-300 rounded-xl p-3 text-sm resize-none"></textarea>
+                        </div>
+                    `;
+                } else {
+                    html += `
+                        <div>
+                            <label class="block text-xs font-medium text-gray-500 mb-1">${field.label}</label>
+                            <input type="${field.type}" name="ritual-${field.id}" placeholder="${field.placeholder}" class="w-full border border-gray-300 rounded-xl p-3 text-sm">
+                        </div>
+                    `;
+                }
+            });
+            html += `</div>`;
+            
+            container.innerHTML = html;
+        }
+
+        function getRitualLocation() {
+            const locations = [
+                'Кафе "У реки"', 'Рынок в Горно', 'Перевал Кату-Ярык', 
+                'Чуйский тракт', 'Отель "Алтай"', 'Заправка №5',
+                'Смотровая площадка', 'Глэмпинг "Звёзды"'
+            ];
+            document.getElementById('ritual-location').value = locations[Math.floor(Math.random() * locations.length)];
+            showToast('📍 Геолокация определена');
+        }
+
+        function handleRitualSubmit(e) {
+            e.preventDefault();
+            
+            if (!selectedRitualCategory) {
+                alert('Выберите категорию момента!');
+                return;
+            }
+
+            const category = RITUAL_CATEGORIES[selectedRitualCategory];
+            const formData = new FormData(e.target);
+            
+            // Collect fields
+            const fields = {};
+            category.fields.forEach(field => {
+                const value = formData.get(`ritual-${field.id}`);
+                if (value) fields[field.id] = value;
+            });
+
+            // Collect tags
+            const tags = Array.from(document.querySelectorAll('input[name="ritual-tags"]:checked')).map(cb => cb.value);
+
+            const ritual = {
+                id: Date.now().toString(),
+                category: selectedRitualCategory,
+                categoryIcon: category.icon,
+                categoryName: category.name,
+                location: document.getElementById('ritual-location').value,
+                notes: document.getElementById('ritual-notes').value,
+                fields,
+                tags,
+                routeId: document.getElementById('ritual-route').value || null,
+                timestamp: new Date().toISOString()
+            };
+
+            state.rituals.unshift(ritual);
+            saveState();
+            closeRitualModal();
+            renderRitualsPage();
+            updateStats();
+        }
+
+        function viewRitual(id) {
+            const ritual = state.rituals.find(r => r.id === id);
+            if (!ritual) return;
+
+            const category = RITUAL_CATEGORIES[ritual.category];
+            
+            let html = `
+                <div class="space-y-4">
+                    <div class="flex items-center gap-3">
+                        <div class="w-12 h-12 ${category.gradient} rounded-xl flex items-center justify-center text-white text-2xl">${category.icon}</div>
+                        <div>
+                            <div class="font-bold text-gray-900">${category.name}</div>
+                            <div class="text-xs text-gray-500">${new Date(ritual.timestamp).toLocaleString('ru-RU')}</div>
+                        </div>
+                    </div>
+
+                    <div class="bg-gray-50 rounded-xl p-4">
+                        <div class="text-sm text-gray-500 mb-1">📍 Где было</div>
+                        <div class="font-medium">${ritual.location || 'Не указано'}</div>
+                    </div>
+
+                    ${Object.keys(ritual.fields).length > 0 ? `
+                    <div class="bg-gray-50 rounded-xl p-4">
+                        <div class="text-sm text-gray-500 mb-3">📋 Детали</div>
+                        <div class="space-y-2">
+                            ${category.fields.filter(f => ritual.fields[f.id]).map(f => `
+                                <div class="flex justify-between py-2 border-b border-gray-200 last:border-0">
+                                    <span class="text-sm text-gray-600">${f.label}</span>
+                                    <span class="text-sm font-medium text-gray-900">${ritual.fields[f.id]}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                    ` : ''}
+
+                    ${ritual.notes ? `
+                    <div class="bg-gray-50 rounded-xl p-4">
+                        <div class="text-sm text-gray-500 mb-1">💭 Впечатления</div>
+                        <div class="text-sm text-gray-800 whitespace-pre-line">${ritual.notes}</div>
+                    </div>
+                    ` : ''}
+
+                    ${ritual.tags && ritual.tags.length > 0 ? `
+                    <div class="flex flex-wrap gap-2">
+                        ${ritual.tags.map(t => `<span class="bg-blue-100 text-blue-700 text-xs px-3 py-1 rounded-full">${t}</span>`).join('')}
+                    </div>
+                    ` : ''}
+
+                    ${ritual.routeId ? `
+                    <div class="bg-purple-50 rounded-xl p-3">
+                        <div class="text-xs text-purple-600 font-medium">📎 Привязано к маршруту</div>
+                    </div>
+                    ` : ''}
+
+                    <button onclick="deleteRitual('${id}')" class="w-full bg-red-100 text-red-700 font-medium py-3 rounded-xl hover:bg-red-200 transition-colors">🗑️ Удалить момент</button>
+                </div>
+            `;
+
+            document.getElementById('view-item-title').textContent = category.name;
+            document.getElementById('view-item-content').innerHTML = html;
+            document.getElementById('view-item-modal').classList.remove('hidden');
+            setTimeout(() => document.querySelector('#view-item-modal > div').classList.remove('translate-y-full'), 10);
+        }
+
+        function closeViewItemModal() {
+            document.querySelector('#view-item-modal > div').classList.add('translate-y-full');
+            setTimeout(() => document.getElementById('view-item-modal').classList.add('hidden'), 300);
+        }
+
+        function deleteRitual(id) {
+            if (!confirm('Удалить этот момент?')) return;
+            state.rituals = state.rituals.filter(r => r.id !== id);
+            saveState();
+            closeViewItemModal();
+            renderRitualsPage();
+            updateStats();
+        }
+
+        // ==================== EXPORT PAGE ====================
+        function renderExportPage() {
+            const main = document.getElementById('main-view');
+            
+            let html = `
+                <div class="px-4 mt-4">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-2">Экспорт</h2>
+                    <p class="text-sm text-gray-500 mb-6">Превратите моменты в контент</p>
+                    
+                    <div class="space-y-4">
+                        <!-- Export Rituals -->
+                        <div class="export-card bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
+                            <div class="flex items-center gap-3 mb-4">
+                                <div class="w-12 h-12 gradient-yellow rounded-xl flex items-center justify-center text-white text-xl">⚡</div>
+                                <div><h3 class="font-bold">Экспорт ритуалов</h3><p class="text-xs text-gray-500">Все спонтанные моменты</p></div>
+                            </div>
+                            <div class="flex flex-wrap gap-2 mb-3">
+                                <button onclick="selectExportTag('all',this)" class="export-tag-btn px-3 py-1.5 ${selectedExportTag === 'all' ? 'bg-purple-100 text-purple-700' : 'bg-gray-100 text-gray-700'} text-xs font-medium rounded-full">Все</button>
+                                <button onclick="selectExportTag('#гайд',this)" class="export-tag-btn px-3 py-1.5 ${selectedExportTag === '#гайд' ? 'bg-purple-100 text-purple-700' : 'bg-gray-100 text-gray-700'} text-xs font-medium rounded-full">#гайд</button>
+                                <button onclick="selectExportTag('#рекомендую',this)" class="export-tag-btn px-3 py-1.5 ${selectedExportTag === '#рекомендую' ? 'bg-purple-100 text-purple-700' : 'bg-gray-100 text-gray-700'} text-xs font-medium rounded-full">#рекомендую</button>
+                            </div>
+                            <button onclick="exportRituals()" class="w-full gradient-yellow text-white font-bold py-3 rounded-xl">Экспортировать ритуалы</button>
+                        </div>
+
+                        <!-- Export by Category -->
+                        <div class="export-card bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
+                            <div class="flex items-center gap-3 mb-4">
+                                <div class="w-12 h-12 gradient-blue rounded-xl flex items-center justify-center text-white text-xl">📊</div>
+                                <div><h3 class="font-bold">По категориям</h3><p class="text-xs text-gray-500">Статистика по типам моментов</p></div>
+                            </div>
+                            <button onclick="exportByCategory()" class="w-full gradient-blue text-white font-bold py-3 rounded-xl">Сформировать отчёт</button>
+                        </div>
+
+                        <!-- Export Guide -->
+                        <div class="export-card bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
+                            <div class="flex items-center gap-3 mb-4">
+                                <div class="w-12 h-12 gradient-orange rounded-xl flex items-center justify-center text-white text-xl">📖</div>
+                                <div><h3 class="font-bold">Гайд для читателя</h3><p class="text-xs text-gray-500">Только полезная информация</p></div>
+                            </div>
+                            <button onclick="exportGuide()" class="w-full gradient-orange text-white font-bold py-3 rounded-xl">Экспортировать гайд</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            main.innerHTML = html;
+        }
+
+        function selectExportTag(tag, btn) {
+            selectedExportTag = tag;
+            document.querySelectorAll('.export-tag-btn').forEach(b => {
+                b.classList.remove('bg-purple-100', 'text-purple-700');
+                b.classList.add('bg-gray-100', 'text-gray-700');
+            });
+            btn.classList.remove('bg-gray-100', 'text-gray-700');
+            btn.classList.add('bg-purple-100', 'text-purple-700');
+        }
+
+        function exportRituals() {
+            let content = `# ⚡ Спонтанные моменты\n\n`;
+            
+            let rituals = state.rituals;
+            if (selectedExportTag !== 'all') {
+                rituals = rituals.filter(r => r.tags && r.tags.includes(selectedExportTag));
+            }
+
+            if (rituals.length === 0) {
+                content += '_Нет моментов для экспорта_';
+            } else {
+                rituals.forEach(r => {
+                    const cat = RITUAL_CATEGORIES[r.category];
+                    content += `## ${cat ? cat.icon : '⚡'} ${cat ? cat.name : r.category}\n\n`;
+                    content += `📍 ${r.location}\n`;
+                    content += `📅 ${new Date(r.timestamp).toLocaleString('ru-RU')}\n\n`;
+                    
+                    if (r.fields && Object.keys(r.fields).length > 0) {
+                        content += `**Детали:**\n`;
+                        if (r.fields.place_name) content += `- Место: ${r.fields.place_name}\n`;
+                        if (r.fields.price) content += `- Цена: ${r.fields.price}₽\n`;
+                        if (r.fields.rating) content += `- Оценка: ${r.fields.rating}\n`;
+                        content += `\n`;
+                    }
+                    
+                    if (r.notes) {
+                        content += `**Впечатления:**\n${r.notes}\n\n`;
+                    }
+                    
+                    if (r.tags && r.tags.length > 0) {
+                        content += `Теги: ${r.tags.join(' ')}\n\n`;
+                    }
+                    
+                    content += `---\n\n`;
+                });
+            }
+
+            showExportResult('Ритуалы', content);
+        }
+
+        function exportByCategory() {
+            let content = `# 📊 Статистика по категориям\n\n`;
+            
+            const byCategory = {};
+            state.rituals.forEach(r => {
+                if (!byCategory[r.category]) byCategory[r.category] = [];
+                byCategory[r.category].push(r);
+            });
+
+            Object.entries(byCategory).forEach(([catId, rituals]) => {
+                const cat = RITUAL_CATEGORIES[catId];
+                content += `## ${cat ? cat.icon : '⚡'} ${cat ? cat.name : catId}\n`;
+                content += `Количество: ${rituals.length}\n\n`;
+                
+                // Calculate average price if available
+                const prices = rituals.filter(r => r.fields && r.fields.price).map(r => parseFloat(r.fields.price));
+                if (prices.length > 0) {
+                    const avg = Math.round(prices.reduce((a,b) => a+b, 0) / prices.length);
+                    content += `Средняя цена: ${avg}₽\n\n`;
+                }
+            });
+
+            showExportResult('Статистика', content);
+        }
+
+        function exportGuide() {
+            let content = `# 📖 Гайд путешественника\n\n`;
+            content += `Собрано из спонтанных моментов с тегом #гайд и #рекомендую\n\n---\n\n`;
+
+            // Food recommendations
+            const foodRituals = state.rituals.filter(r => r.category === 'food' && r.tags && (r.tags.includes('#гайд') || r.tags.includes('#рекомендую')));
+            if (foodRituals.length > 0) {
+                content += `## 🍽️ Где поесть\n\n`;
+                foodRituals.forEach(r => {
+                    content += `### ${r.fields.place_name || r.location}\n`;
+                    if (r.fields.cuisine) content += `Кухня: ${r.fields.cuisine}\n`;
+                    if (r.fields.dish) content += `Что пробовать: ${r.fields.dish}\n`;
+                    if (r.fields.price) content += `Средний чек: ${r.fields.price}₽\n`;
+                    if (r.fields.rating) content += `Оценка: ${r.fields.rating}\n`;
+                    if (r.notes) content += `\n${r.notes}\n`;
+                    content += `\n---\n\n`;
+                });
+            }
+
+            // Accommodation recommendations
+            const stayRituals = state.rituals.filter(r => r.category === 'accommodation' && r.tags && (r.tags.includes('#гайд') || r.tags.includes('#рекомендую')));
+            if (stayRituals.length > 0) {
+                content += `## 🏨 Где остановиться\n\n`;
+                stayRituals.forEach(r => {
+                    content += `### ${r.fields.place_name || r.location}\n`;
+                    if (r.fields.type) content += `Тип: ${r.fields.type}\n`;
+                    if (r.fields.price) content += `Цена: ${r.fields.price}₽/ночь\n`;
+                    if (r.fields.comfort) content += `Комфорт: ${r.fields.comfort}\n`;
+                    if (r.notes) content += `\n${r.notes}\n`;
+                    content += `\n---\n\n`;
+                });
+            }
+
+            // Sights recommendations
+            const sightRituals = state.rituals.filter(r => r.category === 'sight' && r.tags && (r.tags.includes('#гайд') || r.tags.includes('#рекомендую')));
+            if (sightRituals.length > 0) {
+                content += `## 🏛️ Что посмотреть\n\n`;
+                sightRituals.forEach(r => {
+                    content += `### ${r.fields.place_name || r.location}\n`;
+                    if (r.fields.entry_price) content += `Вход: ${r.fields.entry_price}₽\n`;
+                    if (r.fields.visit_duration) content += `Время: ${r.fields.visit_duration}\n`;
+                    if (r.notes) content += `\n${r.notes}\n`;
+                    content += `\n---\n\n`;
+                });
+            }
+
+            showExportResult('Гайд', content);
+        }
+
+        function showExportResult(title, content) {
+            lastExportRitualContent = content;
+            document.getElementById('export-result-title').textContent = title;
+            document.getElementById('export-result-content').textContent = content;
+            document.getElementById('export-result-modal').classList.remove('hidden');
+            setTimeout(() => document.querySelector('#export-result-modal > div').classList.remove('translate-y-full'), 10);
+        }
+
+        function closeExportResult() {
+            document.querySelector('#export-result-modal > div').classList.add('translate-y-full');
+            setTimeout(() => document.getElementById('export-result-modal').classList.add('hidden'), 300);
+        }
+
+        function copyExportResult() {
+            navigator.clipboard.writeText(lastExportRitualContent).then(() => showToast('Скопировано!'));
+        }
+
+        function downloadExportResult() {
+            const blob = new Blob([lastExportRitualContent], { type: 'text/markdown' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'rituals-' + Date.now() + '.md';
+            a.click();
+            URL.revokeObjectURL(url);
+            showToast('Скачано!');
+        }
+
+        // ==================== ROUTE MODAL ====================
+        function openCreateRouteModal() {
+            document.getElementById('create-route-modal').classList.remove('hidden');
+            setTimeout(() => document.querySelector('#create-route-modal > div').classList.remove('translate-y-full'), 10);
+        }
+        function closeCreateRouteModal() {
+            document.querySelector('#create-route-modal > div').classList.add('translate-y-full');
+            setTimeout(() => document.getElementById('create-route-modal').classList.add('hidden'), 300);
+        }
+
+        function handleCreateRoute(e) {
+            e.preventDefault();
+            state.routes.unshift({
+                id: Date.now().toString(),
+                title: document.getElementById('create-title').value,
+                date: document.getElementById('create-date').value,
+                type: document.querySelector('input[name="route-type"]:checked').value,
+                waypoints: [], notes: [], expenses: []
+            });
+            saveState();
+            closeCreateRouteModal();
+            renderDashboard();
+            updateStats();
+        }
+
+        function openRouteDetail(routeId) {
+            showToast('Переход к маршруту: ' + routeId);
+        }
+
+        // ==================== GPS ====================
+        function startGPSTracking() {
+            let lat = 51.5 + Math.random() * 5, lng = 83 + Math.random() * 5;
+            gpsInterval = setInterval(() => {
+                lat += (Math.random() - 0.5) * 0.01;
+                lng += (Math.random() - 0.5) * 0.01;
+                document.getElementById('gps-coords').textContent = `${lat.toFixed(4)}° ${lng.toFixed(4)}°`;
+            }, 5000);
+        }
+
+        function stopGPSTracking() {
+            if (gpsInterval) { clearInterval(gpsInterval); gpsInterval = null; }
+        }
+
+        // ==================== INIT ====================
+        function init() {
+            loadState();
+            
+            if (state.rituals.length === 0) {
+                // Demo rituals
+                state.rituals.push(
+                    {
+                        id: 'r1',
+                        category: 'food',
+                        categoryIcon: '🍽️',
+                        categoryName: 'Еда / Кафе',
+                        location: 'Кафе "У реки"',
+                        notes: 'Очень вкусные хычины! Обязательно попробуйте.',
+                        fields: { place_name: 'Кафе "У реки"', cuisine: 'Кавказская', dish: 'Хычины с сыром', price: '350', rating: '⭐️⭐️⭐️⭐️⭐️', atmosphere: 'Уютно' },
+                        tags: ['#гайд', '#рекомендую', '#спонтан'],
+                        routeId: null,
+                        timestamp: new Date(Date.now() - 3600000).toISOString()
+                    },
+                    {
+                        id: 'r2',
+                        category: 'sight',
+                        categoryIcon: '🏛️',
+                        categoryName: 'Достопримечательность',
+                        location: 'Перевал Кату-Ярык',
+                        notes: 'Виды просто космос! Лучше ехать на рассвете.',
+                        fields: { place_name: 'Перевал Кату-Ярык', entry_price: '0', visit_duration: '1.5 часа', crowd: 'Средне', photo_worthy: '📸📸📸' },
+                        tags: ['#гайд', '#спонтан'],
+                        routeId: null,
+                        timestamp: new Date(Date.now() - 7200000).toISOString()
+                    },
+                    {
+                        id: 'r3',
+                        category: 'insight',
+                        categoryIcon: '💡',
+                        categoryName: 'Инсайт / Идея',
+                        location: 'В дороге',
+                        notes: 'Идея для поста: сравнение цен на бензин в разных регионах. Нужно собрать данные по заправкам.',
+                        fields: { topic: 'Цены на бензин', insight_text: 'Заметил что цены сильно отличаются', action: 'Написать пост' },
+                        tags: ['#идея', '#спонтан'],
+                        routeId: null,
+                        timestamp: new Date(Date.now() - 10800000).toISOString()
+                    }
+                );
+                saveState();
+            }
+
+            navigateTo('dashboard');
+        }
+
+        init();
+    </script>
+</body>
+</html>
+

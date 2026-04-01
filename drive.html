@@ -1,0 +1,1368 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Активный маршрут - Дневник путешественника от Ковальского</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f0f2f5; }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        .fade-in { animation: fadeIn 0.3s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .slide-up { animation: slideUp 0.3s ease-out; }
+        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+        
+        .custom-scroll::-webkit-scrollbar { width: 6px; }
+        .custom-scroll::-webkit-scrollbar-track { background: #f1f1f1; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+        .custom-scroll::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        .gradient-green { background: linear-gradient(135deg, #22c55e 0%, #15803d 100%); }
+        .gradient-green-light { background: linear-gradient(135deg, #4ade80 0%, #22c55e 100%); }
+        .gradient-blue { background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); }
+        .gradient-purple { background: linear-gradient(135deg, #a855f7 0%, #7c3aed 100%); }
+        .gradient-orange { background: linear-gradient(135deg, #f97316 0%, #c2410c 100%); }
+        
+        .timeline-item { transition: all 0.2s ease; }
+        .timeline-item:hover { transform: translateX(4px); }
+        
+        .toast { animation: toastIn 0.3s ease-out, toastOut 0.3s ease-in 2.7s; }
+        @keyframes toastIn { from { transform: translateY(100px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @keyframes toastOut { from { transform: translateY(0); opacity: 1; } to { transform: translateY(100px); opacity: 0; } }
+
+        .tag-checkbox:checked + span {
+            background-color: #3b82f6;
+            color: white;
+        }
+
+        .pulse-dot {
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.2); }
+        }
+
+        .route-segment {
+            background: linear-gradient(90deg, #22c55e 0%, #4ade80 50%, #22c55e 100%);
+            background-size: 200% 100%;
+            animation: shimmer 2s infinite;
+        }
+        @keyframes shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+    </style>
+</head>
+<body class="h-screen flex flex-col overflow-hidden">
+
+    <!-- App Container -->
+    <div id="app" class="flex-1 flex flex-col h-full max-w-lg mx-auto w-full bg-white shadow-2xl relative overflow-hidden">
+        
+        <!-- Header -->
+        <header class="gradient-green text-white p-6 pb-8 rounded-b-3xl shadow-lg z-10">
+            <div class="flex items-center gap-3 mb-4">
+                <button onclick="goBack()" class="bg-white/20 hover:bg-white/30 backdrop-blur-sm p-2.5 rounded-xl transition-all">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                    </svg>
+                </button>
+                <div class="flex-1">
+                    <p class="text-green-200 text-xs font-medium uppercase tracking-wider mb-1">Активный маршрут</p>
+                    <h1 class="text-xl font-bold" id="route-title">Загрузка...</h1>
+                </div>
+                <button onclick="toggleGPSTracking()" id="gps-btn" class="bg-white/20 hover:bg-white/30 backdrop-blur-sm p-2.5 rounded-xl transition-all" title="GPS трекинг">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    </svg>
+                </button>
+                <button onclick="resetAllData()" class="bg-red-500/80 hover:bg-red-600 backdrop-blur-sm p-2.5 rounded-xl transition-all" title="Сбросить все данные">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                </button>
+            </div>
+            
+            <!-- GPS Status Bar -->
+            <div id="gps-status" class="hidden bg-white/20 backdrop-blur-sm rounded-xl p-3 mb-3">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <div class="w-2 h-2 bg-green-400 rounded-full pulse-dot"></div>
+                        <span class="text-xs font-medium">GPS активен</span>
+                    </div>
+                    <span class="text-xs" id="gps-coords">--° --°</span>
+                </div>
+            </div>
+            
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2 text-green-100 text-sm">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                    </svg>
+                    <span id="route-date">...</span>
+                </div>
+                <div class="flex items-center gap-2 text-green-100 text-sm">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    <span id="current-time">--:--</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Quick Action Buttons -->
+        <div class="px-4 -mt-6 relative z-20">
+            <div class="bg-white rounded-2xl shadow-lg p-4 grid grid-cols-2 gap-3">
+                <button onclick="openNoteModal()" class="flex items-center gap-3 p-4 rounded-xl gradient-blue text-white shadow-md hover:shadow-lg transform active:scale-[0.98] transition-all">
+                    <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                        </svg>
+                    </div>
+                    <div class="text-left">
+                        <div class="font-bold text-sm">Заметка</div>
+                        <div class="text-xs text-green-100">С тегами</div>
+                    </div>
+                </button>
+                <button onclick="openExpenseModal()" class="flex items-center gap-3 p-4 rounded-xl gradient-green text-white shadow-md hover:shadow-lg transform active:scale-[0.98] transition-all">
+                    <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                    </div>
+                    <div class="text-left">
+                        <div class="font-bold text-sm">Расход</div>
+                        <div class="text-xs text-green-100">Умные поля</div>
+                    </div>
+                </button>
+            </div>
+        </div>
+
+        <!-- Stats Bar -->
+        <div class="px-4 mt-4">
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 grid grid-cols-4 gap-2">
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-blue-600" id="stat-notes">0</div>
+                    <div class="text-[10px] text-gray-500 uppercase">Заметок</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-green-600" id="stat-expenses">0</div>
+                    <div class="text-[10px] text-gray-500 uppercase">Расходов</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-purple-600" id="stat-total">0₽</div>
+                    <div class="text-[10px] text-gray-500 uppercase">Всего</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-orange-600" id="stat-waypoints">0</div>
+                    <div class="text-[10px] text-gray-500 uppercase">Точек</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filter Tabs -->
+        <div class="px-4 mt-4">
+            <div class="flex gap-2 overflow-x-auto hide-scrollbar">
+                <button onclick="setTimelineFilter('all')" class="timeline-filter-btn pb-2 px-3 text-xs font-medium border-b-2 border-green-600 text-green-600 transition-all whitespace-nowrap" data-filter="all">
+                    📍 Всё
+                </button>
+                <button onclick="setTimelineFilter('notes')" class="timeline-filter-btn pb-2 px-3 text-xs font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 transition-all whitespace-nowrap" data-filter="notes">
+                    📝 Заметки
+                </button>
+                <button onclick="setTimelineFilter('expenses')" class="timeline-filter-btn pb-2 px-3 text-xs font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 transition-all whitespace-nowrap" data-filter="expenses">
+                    💰 Расходы
+                </button>
+                <button onclick="setTimelineFilter('waypoints')" class="timeline-filter-btn pb-2 px-3 text-xs font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 transition-all whitespace-nowrap" data-filter="waypoints">
+                    🚗 Маршрут
+                </button>
+                <button onclick="setTimelineFilter('segments')" class="timeline-filter-btn pb-2 px-3 text-xs font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 transition-all whitespace-nowrap" data-filter="segments">
+                    ⏱️ Отрезки
+                </button>
+            </div>
+        </div>
+
+        <!-- Main Content Area - Timeline -->
+        <main id="main-view" class="flex-1 overflow-y-auto custom-scroll relative p-4 pb-24">
+            <!-- Dynamic Timeline Content -->
+        </main>
+
+        <!-- Floating Action Buttons -->
+        <div class="absolute bottom-24 right-4 flex flex-col gap-3 z-30">
+            <button onclick="openWaypointModal()" class="w-14 h-14 gradient-orange rounded-full shadow-lg flex items-center justify-center text-white hover:shadow-xl transform active:scale-90 transition-all" title="Добавить точку">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                </svg>
+            </button>
+            <button onclick="openWaypointsModal()" class="w-14 h-14 gradient-green rounded-full shadow-lg flex items-center justify-center text-white hover:shadow-xl transform active:scale-90 transition-all" title="Все точки">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>
+                </svg>
+            </button>
+        </div>
+
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-20 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white px-6 py-3 rounded-xl shadow-lg z-50 hidden toast">
+        <span id="toast-message">Сохранено!</span>
+    </div>
+
+    <!-- Note Modal -->
+    <div id="note-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-end sm:items-center justify-center backdrop-blur-sm">
+        <div class="bg-white w-full max-w-md rounded-t-3xl sm:rounded-2xl p-6 shadow-2xl transform transition-transform duration-300 translate-y-full sm:translate-y-0 slide-up max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-6 sticky top-0 bg-white pb-2 border-b">
+                <h3 class="text-lg font-bold text-gray-900">Новая заметка</h3>
+                <button onclick="closeNoteModal()" class="text-gray-400 hover:text-gray-600 p-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            
+            <form onsubmit="handleNoteSubmit(event)" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Текст заметки *</label>
+                    <textarea id="note-text" required rows="4" placeholder="Что происходит? Впечатления, факты, наблюдения..." class="w-full border border-gray-300 rounded-xl p-3.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none resize-none"></textarea>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Геолокация</label>
+                    <div class="flex gap-2">
+                        <input type="text" id="note-location" placeholder="Авто-определение..." class="flex-1 border border-gray-300 rounded-xl p-3.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none">
+                        <button type="button" onclick="getCurrentLocation()" class="bg-blue-100 text-blue-600 p-3.5 rounded-xl hover:bg-blue-200 transition-colors">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Предустановленные теги</label>
+                    <div class="flex flex-wrap gap-2 mb-3">
+                        <label class="cursor-pointer">
+                            <input type="checkbox" name="tags" value="#пост" class="tag-checkbox sr-only">
+                            <span class="inline-block px-3 py-1.5 bg-gray-100 text-gray-700 text-xs font-medium rounded-full transition-all hover:bg-gray-200">#пост</span>
+                        </label>
+                        <label class="cursor-pointer">
+                            <input type="checkbox" name="tags" value="#гайд" class="tag-checkbox sr-only">
+                            <span class="inline-block px-3 py-1.5 bg-gray-100 text-gray-700 text-xs font-medium rounded-full transition-all hover:bg-gray-200">#гайд</span>
+                        </label>
+                        <label class="cursor-pointer">
+                            <input type="checkbox" name="tags" value="#идея" class="tag-checkbox sr-only">
+                            <span class="inline-block px-3 py-1.5 bg-gray-100 text-gray-700 text-xs font-medium rounded-full transition-all hover:bg-gray-200">#идея</span>
+                        </label>
+                        <label class="cursor-pointer">
+                            <input type="checkbox" name="tags" value="#черновик" class="tag-checkbox sr-only">
+                            <span class="inline-block px-3 py-1.5 bg-gray-100 text-gray-700 text-xs font-medium rounded-full transition-all hover:bg-gray-200">#черновик</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Свои теги</label>
+                    <div id="custom-tags-container" class="flex flex-wrap gap-2 mb-2">
+                        <!-- Custom tags will be added here -->
+                    </div>
+                    <div class="flex gap-2">
+                        <input type="text" id="custom-tag-input" placeholder="Введите тег (например: #алтай2024)" class="flex-1 border border-gray-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                        <button type="button" onclick="addCustomTag()" class="bg-blue-600 text-white px-4 rounded-xl hover:bg-blue-700 transition-colors">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="pt-2 sticky bottom-0 bg-white pt-4">
+                    <button type="submit" class="w-full gradient-blue text-white font-bold py-4 rounded-xl shadow-lg hover:shadow-xl transform active:scale-[0.98] transition-all">
+                        Сохранить заметку
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Expense Modal -->
+    <div id="expense-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-end sm:items-center justify-center backdrop-blur-sm">
+        <div class="bg-white w-full max-w-md rounded-t-3xl sm:rounded-2xl p-6 shadow-2xl transform transition-transform duration-300 translate-y-full sm:translate-y-0 slide-up max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-6 sticky top-0 bg-white pb-2 border-b">
+                <h3 class="text-lg font-bold text-gray-900">Добавить расход</h3>
+                <button onclick="closeExpenseModal()" class="text-gray-400 hover:text-gray-600 p-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            
+            <form onsubmit="handleExpenseSubmit(event)" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Сумма (₽) *</label>
+                    <input type="number" id="exp-amount" required placeholder="0" class="w-full border-2 border-green-300 rounded-xl p-3.5 text-lg font-bold text-green-700 focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-all">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Категория *</label>
+                    <div class="grid grid-cols-3 gap-2">
+                        <label class="cursor-pointer">
+                            <input type="radio" name="exp-category" value="food" class="peer sr-only" checked onchange="renderExpenseFields()">
+                            <div class="border-2 border-gray-200 rounded-xl p-3 text-center peer-checked:border-green-500 peer-checked:bg-green-50 transition-all">
+                                <div class="text-xl mb-1">🍽️</div>
+                                <div class="text-[10px] font-medium">Еда</div>
+                            </div>
+                        </label>
+                        <label class="cursor-pointer">
+                            <input type="radio" name="exp-category" value="transport" class="peer sr-only" onchange="renderExpenseFields()">
+                            <div class="border-2 border-gray-200 rounded-xl p-3 text-center peer-checked:border-green-500 peer-checked:bg-green-50 transition-all">
+                                <div class="text-xl mb-1">⛽</div>
+                                <div class="text-[10px] font-medium">Транспорт</div>
+                            </div>
+                        </label>
+                        <label class="cursor-pointer">
+                            <input type="radio" name="exp-category" value="accommodation" class="peer sr-only" onchange="renderExpenseFields()">
+                            <div class="border-2 border-gray-200 rounded-xl p-3 text-center peer-checked:border-green-500 peer-checked:bg-green-50 transition-all">
+                                <div class="text-xl mb-1">🏨</div>
+                                <div class="text-[10px] font-medium">Жилье</div>
+                            </div>
+                        </label>
+                        <label class="cursor-pointer">
+                            <input type="radio" name="exp-category" value="souvenirs" class="peer sr-only" onchange="renderExpenseFields()">
+                            <div class="border-2 border-gray-200 rounded-xl p-3 text-center peer-checked:border-green-500 peer-checked:bg-green-50 transition-all">
+                                <div class="text-xl mb-1">🎁</div>
+                                <div class="text-[10px] font-medium">Сувениры</div>
+                            </div>
+                        </label>
+                        <label class="cursor-pointer">
+                            <input type="radio" name="exp-category" value="entertainment" class="peer sr-only" onchange="renderExpenseFields()">
+                            <div class="border-2 border-gray-200 rounded-xl p-3 text-center peer-checked:border-green-500 peer-checked:bg-green-50 transition-all">
+                                <div class="text-xl mb-1">🎟️</div>
+                                <div class="text-[10px] font-medium">Развлечения</div>
+                            </div>
+                        </label>
+                        <label class="cursor-pointer">
+                            <input type="radio" name="exp-category" value="other" class="peer sr-only" onchange="renderExpenseFields()">
+                            <div class="border-2 border-gray-200 rounded-xl p-3 text-center peer-checked:border-green-500 peer-checked:bg-green-50 transition-all">
+                                <div class="text-xl mb-1">📦</div>
+                                <div class="text-[10px] font-medium">Прочее</div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <div id="dynamic-expense-fields" class="space-y-3"></div>
+
+                <div class="pt-2 sticky bottom-0 bg-white pt-4">
+                    <button type="submit" class="w-full gradient-green text-white font-bold py-4 rounded-xl shadow-lg hover:shadow-xl transform active:scale-[0.98] transition-all">
+                        Записать расход
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Waypoint Modal (Add New) -->
+    <div id="waypoint-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-end sm:items-center justify-center backdrop-blur-sm">
+        <div class="bg-white w-full max-w-md rounded-t-3xl sm:rounded-2xl p-6 shadow-2xl transform transition-transform duration-300 translate-y-full sm:translate-y-0 slide-up">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-lg font-bold text-gray-900">Новая точка маршрута</h3>
+                <button onclick="closeWaypointModal()" class="text-gray-400 hover:text-gray-600 p-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            
+            <form onsubmit="handleWaypointSubmit(event)" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Название точки *</label>
+                    <input type="text" id="wp-name" required placeholder="Например: Перевал Кату-Ярык" class="w-full border border-gray-300 rounded-xl p-3.5 text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Тип точки</label>
+                    <div class="grid grid-cols-5 gap-2">
+                        <label class="cursor-pointer">
+                            <input type="radio" name="wp-type" value="sight" class="peer sr-only" checked>
+                            <div class="border-2 border-gray-200 rounded-xl p-2 text-center peer-checked:border-orange-500 peer-checked:bg-orange-50 transition-all">
+                                <div class="text-lg">🏛️</div>
+                                <div class="text-[10px]">Обзор</div>
+                            </div>
+                        </label>
+                        <label class="cursor-pointer">
+                            <input type="radio" name="wp-type" value="food" class="peer sr-only">
+                            <div class="border-2 border-gray-200 rounded-xl p-2 text-center peer-checked:border-orange-500 peer-checked:bg-orange-50 transition-all">
+                                <div class="text-lg">🍽️</div>
+                                <div class="text-[10px]">Еда</div>
+                            </div>
+                        </label>
+                        <label class="cursor-pointer">
+                            <input type="radio" name="wp-type" value="stay" class="peer sr-only">
+                            <div class="border-2 border-gray-200 rounded-xl p-2 text-center peer-checked:border-orange-500 peer-checked:bg-orange-50 transition-all">
+                                <div class="text-lg">🏨</div>
+                                <div class="text-[10px]">Ночь</div>
+                            </div>
+                        </label>
+                        <label class="cursor-pointer">
+                            <input type="radio" name="wp-type" value="transport" class="peer sr-only">
+                            <div class="border-2 border-gray-200 rounded-xl p-2 text-center peer-checked:border-orange-500 peer-checked:bg-orange-50 transition-all">
+                                <div class="text-lg">🚗</div>
+                                <div class="text-[10px]">Транс</div>
+                            </div>
+                        </label>
+                        <label class="cursor-pointer">
+                            <input type="radio" name="wp-type" value="other" class="peer sr-only">
+                            <div class="border-2 border-gray-200 rounded-xl p-2 text-center peer-checked:border-orange-500 peer-checked:bg-orange-50 transition-all">
+                                <div class="text-lg">📍</div>
+                                <div class="text-[10px]">Другое</div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Комментарий</label>
+                    <textarea id="wp-comment" rows="2" placeholder="Зачем останавливаемся..." class="w-full border border-gray-300 rounded-xl p-3.5 text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none resize-none"></textarea>
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <input type="checkbox" id="wp-start-segment" class="w-4 h-4 text-orange-600 rounded focus:ring-orange-500">
+                    <label for="wp-start-segment" class="text-sm text-gray-700">Начать отслеживание отрезка пути</label>
+                </div>
+
+                <div class="pt-2">
+                    <button type="submit" class="w-full gradient-orange text-white font-bold py-4 rounded-xl shadow-lg hover:shadow-xl transform active:scale-[0.98] transition-all">
+                        Добавить точку
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Waypoints List Modal -->
+    <div id="waypoints-list-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-end sm:items-center justify-center backdrop-blur-sm">
+        <div class="bg-white w-full max-w-md rounded-t-3xl sm:rounded-2xl p-6 shadow-2xl transform transition-transform duration-300 translate-y-full sm:translate-y-0 slide-up max-h-[80vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-lg font-bold text-gray-900">Все точки маршрута</h3>
+                <button onclick="closeWaypointsModal()" class="text-gray-400 hover:text-gray-600 p-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            
+            <div id="waypoints-list" class="space-y-3"></div>
+        </div>
+    </div>
+
+    <!-- View Item Modal -->
+    <div id="view-item-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-end sm:items-center justify-center backdrop-blur-sm">
+        <div class="bg-white w-full max-w-md rounded-t-3xl sm:rounded-2xl p-6 shadow-2xl transform transition-transform duration-300 translate-y-full sm:translate-y-0 slide-up">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-bold text-gray-900" id="view-item-title">Просмотр</h3>
+                <button onclick="closeViewItemModal()" class="text-gray-400 hover:text-gray-600 p-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            <div id="view-item-content" class="text-sm text-gray-700"></div>
+        </div>
+    </div>
+
+    <script>
+        // --- State Management ---
+        const STORAGE_KEY = 'kowalski_travel_diary_active_v2';
+        
+        let state = {
+            routes: [],
+            customTags: []
+        };
+
+        let currentRouteId = null;
+        let currentRoute = null;
+        let timelineFilter = 'all';
+        let gpsTracking = false;
+        let gpsInterval = null;
+        let segmentStart = null;
+        let selectedCustomTags = [];
+
+        // --- Storage Functions ---
+        function loadState() {
+            try {
+                const saved = localStorage.getItem(STORAGE_KEY);
+                if (saved) {
+                    state = JSON.parse(saved);
+                }
+                if (!state.customTags) state.customTags = [];
+            } catch (e) {
+                console.error('Error loading state:', e);
+                state = { routes: [], customTags: [] };
+            }
+        }
+
+        function saveState() {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+                showToast('Данные сохранены!');
+            } catch (e) {
+                console.error('Error saving state:', e);
+                showToast('Ошибка сохранения!');
+            }
+        }
+
+        function resetAllData() {
+            if (confirm('Вы уверены? Все данные будут удалены!')) {
+                localStorage.removeItem(STORAGE_KEY);
+                state = { routes: [], customTags: [] };
+                init();
+                showToast('Данные сброшены');
+            }
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-message').textContent = message;
+            toast.classList.remove('hidden');
+            setTimeout(() => {
+                toast.classList.add('hidden');
+            }, 3000);
+        }
+
+        // --- Route Management ---
+        function loadRouteData() {
+            if (currentRouteId) {
+                currentRoute = state.routes.find(r => r.id === currentRouteId);
+                if (currentRoute) {
+                    document.getElementById('route-title').textContent = currentRoute.title;
+                    document.getElementById('route-date').textContent = currentRoute.date;
+                    updateStats();
+                    renderTimeline();
+                    updateTime();
+                }
+            }
+        }
+
+        function updateStats() {
+            if (!currentRoute) return;
+            
+            const notesCount = (currentRoute.notes || []).length;
+            const expensesCount = (currentRoute.expenses || []).length;
+            const totalExpenses = (currentRoute.expenses || []).reduce((sum, e) => sum + parseFloat(e.amount || 0), 0);
+            const waypointsCount = (currentRoute.waypoints || []).length;
+            const visitedCount = (currentRoute.waypoints || []).filter(w => w.visited).length;
+
+            document.getElementById('stat-notes').textContent = notesCount;
+            document.getElementById('stat-expenses').textContent = expensesCount;
+            document.getElementById('stat-total').textContent = totalExpenses.toLocaleString('ru-RU') + '₽';
+            document.getElementById('stat-waypoints').textContent = `${visitedCount}/${waypointsCount}`;
+        }
+
+        function updateTime() {
+            const now = new Date();
+            document.getElementById('current-time').textContent = now.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+        }
+
+        // --- GPS Tracking ---
+        function toggleGPSTracking() {
+            gpsTracking = !gpsTracking;
+            const gpsBtn = document.getElementById('gps-btn');
+            const gpsStatus = document.getElementById('gps-status');
+            
+            if (gpsTracking) {
+                gpsBtn.classList.add('bg-green-400');
+                gpsStatus.classList.remove('hidden');
+                startGPSSimulation();
+                showToast('GPS трекинг включен');
+            } else {
+                gpsBtn.classList.remove('bg-green-400');
+                gpsStatus.classList.add('hidden');
+                stopGPSTracking();
+                showToast('GPS трекинг выключен');
+            }
+        }
+
+        function startGPSSimulation() {
+            // Simulate GPS coordinates (around Russia)
+            let lat = 51.5 + Math.random() * 5;
+            let lng = 83 + Math.random() * 5;
+            
+            gpsInterval = setInterval(() => {
+                lat += (Math.random() - 0.5) * 0.01;
+                lng += (Math.random() - 0.5) * 0.01;
+                
+                document.getElementById('gps-coords').textContent = `${lat.toFixed(4)}° ${lng.toFixed(4)}°`;
+                
+                // Save GPS point if segment is being tracked
+                if (segmentStart) {
+                    if (!currentRoute.gpsPoints) currentRoute.gpsPoints = [];
+                    currentRoute.gpsPoints.push({
+                        lat,
+                        lng,
+                        timestamp: new Date().toISOString()
+                    });
+                    saveState();
+                }
+            }, 5000);
+        }
+
+        function stopGPSTracking() {
+            if (gpsInterval) {
+                clearInterval(gpsInterval);
+                gpsInterval = null;
+            }
+        }
+
+        function getCurrentLocation() {
+            const locations = [
+                'Перевал Кату-Ярык, Алтай',
+                'Чуйский тракт, 756 км',
+                'Горно-Алтайск',
+                'Акташ',
+                'Кош-Агач',
+                'Телецкое озеро',
+                'Манжерок'
+            ];
+            const randomLoc = locations[Math.floor(Math.random() * locations.length)];
+            document.getElementById('note-location').value = randomLoc;
+            
+            // Also get GPS coords
+            const lat = (51.5 + Math.random() * 5).toFixed(4);
+            const lng = (83 + Math.random() * 5).toFixed(4);
+            showToast(`📍 ${lat}° ${lng}°`);
+        }
+
+        // --- Navigation ---
+        function goBack() {
+            const routeId = prompt('Введите ID маршрута или название для создания нового:', currentRouteId || '');
+            if (routeId) {
+                let route = state.routes.find(r => r.id === routeId || r.title === routeId);
+                if (!route) {
+                    const title = routeId;
+                    const date = prompt('Дата поездки:', new Date().toLocaleDateString('ru-RU'));
+                    if (title && date) {
+                        route = {
+                            id: Date.now().toString(),
+                            title,
+                            date,
+                            type: 'active',
+                            waypoints: [],
+                            notes: [],
+                            expenses: [],
+                            routeSegments: [],
+                            gpsPoints: []
+                        };
+                        state.routes.push(route);
+                        saveState();
+                    }
+                }
+                if (route) {
+                    currentRouteId = route.id;
+                    loadRouteData();
+                }
+            }
+        }
+
+        function setTimelineFilter(filter) {
+            timelineFilter = filter;
+            
+            document.querySelectorAll('.timeline-filter-btn').forEach(btn => {
+                const isActive = btn.dataset.filter === filter;
+                if (isActive) {
+                    btn.classList.remove('border-transparent', 'text-gray-500');
+                    btn.classList.add('border-green-600', 'text-green-600');
+                } else {
+                    btn.classList.add('border-transparent', 'text-gray-500');
+                    btn.classList.remove('border-green-600', 'text-green-600');
+                }
+            });
+            
+            renderTimeline();
+        }
+
+        // --- Timeline View ---
+        function renderTimeline() {
+            const main = document.getElementById('main-view');
+            
+            let items = [];
+            
+            if (timelineFilter === 'waypoints' || timelineFilter === 'all') {
+                if (currentRoute.waypoints) {
+                    currentRoute.waypoints.forEach(w => items.push({ ...w, kind: 'waypoint' }));
+                }
+            }
+            if (timelineFilter === 'notes' || timelineFilter === 'all') {
+                if (currentRoute.notes) {
+                    currentRoute.notes.forEach(n => items.push({ ...n, kind: 'note' }));
+                }
+            }
+            if (timelineFilter === 'expenses' || timelineFilter === 'all') {
+                if (currentRoute.expenses) {
+                    currentRoute.expenses.forEach(e => items.push({ ...e, kind: 'expense' }));
+                }
+            }
+            if (timelineFilter === 'segments' || timelineFilter === 'all') {
+                if (currentRoute.routeSegments) {
+                    currentRoute.routeSegments.forEach(s => items.push({ ...s, kind: 'segment' }));
+                }
+            }
+
+            // Sort by timestamp (newest first)
+            items.sort((a, b) => new Date(b.timestamp || b.createdAt || 0) - new Date(a.timestamp || a.createdAt || 0));
+
+            if (items.length === 0) {
+                main.innerHTML = `
+                    <div class="text-center py-16 fade-in">
+                        <div class="w-20 h-20 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <svg class="w-10 h-10 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                        </div>
+                        <h3 class="font-medium text-gray-700 mb-1">Пока пусто</h3>
+                        <p class="text-sm text-gray-500 mb-4">Добавьте первую точку, заметку или расход</p>
+                        <button onclick="openWaypointModal()" class="gradient-orange text-white px-6 py-2.5 rounded-xl text-sm font-medium shadow-md">
+                            📍 Добавить точку
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+
+            let html = `<div class="space-y-4 relative fade-in">`;
+            html += `<div class="absolute left-6 top-0 bottom-0 w-0.5 bg-gradient-to-b from-green-300 via-green-200 to-transparent"></div>`;
+            
+            let currentDate = null;
+            
+            items.forEach((item) => {
+                const itemDate = new Date(item.timestamp || item.createdAt || 0).toLocaleDateString('ru-RU', { 
+                    day: 'numeric', month: 'long', year: 'numeric' 
+                });
+                
+                if (itemDate !== currentDate) {
+                    currentDate = itemDate;
+                    html += `
+                        <div class="relative z-10">
+                            <div class="bg-green-100 text-green-700 text-xs font-bold px-3 py-1.5 rounded-full inline-block ml-12">
+                                ${itemDate}
+                            </div>
+                        </div>
+                    `;
+                }
+
+                const time = new Date(item.timestamp || item.createdAt || 0).toLocaleTimeString('ru-RU', { 
+                    hour: '2-digit', minute: '2-digit' 
+                });
+
+                if (item.kind === 'waypoint') {
+                    const typeIcons = { sight: '🏛️', food: '🍽️', stay: '🏨', transport: '🚗', other: '📍' };
+                    html += `
+                        <div class="timeline-item flex gap-4 relative">
+                            <div class="w-12 h-12 gradient-orange rounded-full flex items-center justify-center text-white flex-shrink-0 z-10 shadow-lg border-4 border-white">
+                                <span class="text-xl">${typeIcons[item.type] || '📍'}</span>
+                            </div>
+                            <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex-1">
+                                <div class="flex justify-between items-start">
+                                    <div>
+                                        <h4 class="font-bold text-gray-900">${item.name}</h4>
+                                        ${item.comment ? `<p class="text-sm text-gray-600 mt-1">${item.comment}</p>` : ''}
+                                    </div>
+                                    ${item.visited ? '<span class="text-green-600 text-xs font-bold">✓ Посещено</span>' : ''}
+                                </div>
+                                <div class="text-xs text-gray-400 mt-2">${time}</div>
+                                ${item.segmentDuration ? `
+                                    <div class="mt-2 bg-orange-50 text-orange-700 text-xs px-2 py-1 rounded-lg inline-block">
+                                        ⏱️ В пути: ${formatDuration(item.segmentDuration)}
+                                    </div>
+                                ` : ''}
+                                <div class="flex gap-3 mt-3 pt-3 border-t border-gray-100">
+                                    <button onclick="toggleWaypointVisited('${item.id}')" class="text-xs text-green-600 font-medium hover:text-green-700">
+                                        ${item.visited ? 'Не посещено' : 'Посещено'}
+                                    </button>
+                                    <button onclick="deleteWaypoint('${item.id}')" class="text-xs text-red-500 font-medium hover:text-red-600">Удалить</button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                } else if (item.kind === 'note') {
+                    const allTags = [...(item.tags || [])];
+                    const tagsHtml = allTags.map(t => 
+                        `<span class="bg-blue-100 text-blue-700 text-[10px] px-2 py-0.5 rounded-full">${t}</span>`
+                    ).join('');
+                    
+                    html += `
+                        <div class="timeline-item flex gap-4 relative">
+                            <div class="w-12 h-12 gradient-blue rounded-full flex items-center justify-center text-white flex-shrink-0 z-10 shadow-lg border-4 border-white">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                </svg>
+                            </div>
+                            <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex-1">
+                                <div class="flex justify-between items-center mb-2">
+                                    <span class="text-xs font-bold text-gray-400">${time}</span>
+                                    <div class="flex gap-1 flex-wrap justify-end">${tagsHtml}</div>
+                                </div>
+                                <p class="text-sm text-gray-800 whitespace-pre-line">${item.text}</p>
+                                ${item.location ? `
+                                    <div class="mt-2 text-xs text-gray-400 flex items-center gap-1">
+                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                                        </svg>
+                                        ${item.location}
+                                    </div>
+                                ` : ''}
+                                <div class="flex gap-3 mt-3 pt-3 border-t border-gray-100">
+                                    <button onclick="deleteNote('${item.id}')" class="text-xs text-red-500 font-medium hover:text-red-600">Удалить</button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                } else if (item.kind === 'expense') {
+                    const categoryIcons = { 
+                        food: '🍽️', transport: '⛽', accommodation: '🏨', 
+                        souvenirs: '🎁', entertainment: '🎟️', other: '📦' 
+                    };
+                    const categoryNames = { 
+                        food: 'Еда', transport: 'Транспорт', accommodation: 'Жилье', 
+                        souvenirs: 'Сувениры', entertainment: 'Развлечения', other: 'Прочее' 
+                    };
+                    
+                    html += `
+                        <div class="timeline-item flex gap-4 relative">
+                            <div class="w-12 h-12 gradient-green rounded-full flex items-center justify-center text-white flex-shrink-0 z-10 shadow-lg border-4 border-white">
+                                <span class="text-xl">${categoryIcons[item.category] || '💰'}</span>
+                            </div>
+                            <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex-1">
+                                <div class="flex justify-between items-start">
+                                    <div>
+                                        <span class="text-xs font-bold text-green-600 uppercase">${categoryNames[item.category] || item.category}</span>
+                                        <p class="text-sm text-gray-700 mt-1">${getExpenseSummary(item)}</p>
+                                    </div>
+                                    <span class="font-bold text-lg text-gray-900">${item.amount} ₽</span>
+                                </div>
+                                <div class="text-xs text-gray-400 mt-2">${time}</div>
+                                <div class="flex gap-3 mt-3 pt-3 border-t border-gray-100">
+                                    <button onclick="deleteExpense('${item.id}')" class="text-xs text-red-500 font-medium hover:text-red-600">Удалить</button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                } else if (item.kind === 'segment') {
+                    html += `
+                        <div class="timeline-item flex gap-4 relative">
+                            <div class="w-12 h-12 gradient-purple rounded-full flex items-center justify-center text-white flex-shrink-0 z-10 shadow-lg border-4 border-white">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                            </div>
+                            <div class="bg-white p-4 rounded-2xl shadow-sm border-l-4 border-purple-500 flex-1">
+                                <div class="flex justify-between items-start mb-2">
+                                    <div>
+                                        <h4 class="font-bold text-gray-900">🚗 ${item.from} → ${item.to}</h4>
+                                        <p class="text-sm text-gray-600 mt-1">${item.comment || 'Перемещение между точками'}</p>
+                                    </div>
+                                </div>
+                                <div class="flex gap-4 mt-2">
+                                    <div class="bg-purple-50 text-purple-700 text-xs px-3 py-1.5 rounded-lg font-medium">
+                                        ⏱️ ${formatDuration(item.duration)}
+                                    </div>
+                                    <div class="bg-purple-50 text-purple-700 text-xs px-3 py-1.5 rounded-lg font-medium">
+                                        📍 ${item.gpsPoints || 0} точек GPS
+                                    </div>
+                                </div>
+                                <div class="text-xs text-gray-400 mt-2">
+                                    ${new Date(item.startTime).toLocaleString('ru-RU')} — ${new Date(item.endTime).toLocaleString('ru-RU')}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+            });
+            html += `</div>`;
+            main.innerHTML = html;
+        }
+
+        function formatDuration(ms) {
+            const seconds = Math.floor(ms / 1000);
+            const minutes = Math.floor(seconds / 60);
+            const hours = Math.floor(minutes / 60);
+            
+            if (hours > 0) {
+                return `${hours}ч ${minutes % 60}мин`;
+            } else if (minutes > 0) {
+                return `${minutes}мин ${seconds % 60}сек`;
+            } else {
+                return `${seconds}сек`;
+            }
+        }
+
+        function getExpenseSummary(exp) {
+            if (exp.category === 'food') return `${exp.place || 'Заведение'} ${exp.dish ? '• ' + exp.dish : ''}`;
+            if (exp.category === 'transport') return `${exp.type || 'Транспорт'} ${exp.route ? '• ' + exp.route : ''} ${exp.mileage ? '• ' + exp.mileage + ' км' : ''}`;
+            if (exp.category === 'accommodation') return `${exp.name || 'Жилье'} • ${exp.nights || 1} ноч.`;
+            if (exp.category === 'souvenirs') return `${exp.item || 'Покупка'} ${exp.for_whom ? '• ' + exp.for_whom : ''}`;
+            if (exp.category === 'entertainment') return `${exp.activity || 'Развлечение'} ${exp.duration ? '• ' + exp.duration : ''}`;
+            return exp.comment || 'Расход';
+        }
+
+        // --- Custom Tags ---
+        function addCustomTag() {
+            const input = document.getElementById('custom-tag-input');
+            const tag = input.value.trim();
+            
+            if (tag && !selectedCustomTags.includes(tag)) {
+                selectedCustomTags.push(tag);
+                if (!state.customTags.includes(tag)) {
+                    state.customTags.push(tag);
+                    saveState();
+                }
+                renderCustomTags();
+                input.value = '';
+            }
+        }
+
+        function renderCustomTags() {
+            const container = document.getElementById('custom-tags-container');
+            
+            // Show saved custom tags as suggestions
+            let html = '';
+            state.customTags.forEach(tag => {
+                const isSelected = selectedCustomTags.includes(tag);
+                html += `
+                    <button type="button" onclick="toggleCustomTag('${tag}')" 
+                        class="px-3 py-1.5 text-xs font-medium rounded-full transition-all ${
+                            isSelected 
+                                ? 'bg-blue-600 text-white' 
+                                : 'bg-purple-100 text-purple-700 hover:bg-purple-200'
+                        }">
+                        ${tag}
+                    </button>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        function toggleCustomTag(tag) {
+            const index = selectedCustomTags.indexOf(tag);
+            if (index > -1) {
+                selectedCustomTags.splice(index, 1);
+            } else {
+                selectedCustomTags.push(tag);
+            }
+            renderCustomTags();
+        }
+
+        // --- Note Actions ---
+        function openNoteModal() {
+            getCurrentLocation();
+            selectedCustomTags = [];
+            renderCustomTags();
+            
+            document.getElementById('note-modal').classList.remove('hidden');
+            setTimeout(() => {
+                document.querySelector('#note-modal > div').classList.remove('translate-y-full');
+            }, 10);
+        }
+
+        function closeNoteModal() {
+            document.querySelector('#note-modal > div').classList.add('translate-y-full');
+            setTimeout(() => {
+                document.getElementById('note-modal').classList.add('hidden');
+            }, 300);
+            document.getElementById('note-text').value = '';
+            document.getElementById('note-location').value = '';
+            document.querySelectorAll('input[name="tags"]').forEach(cb => cb.checked = false);
+            selectedCustomTags = [];
+        }
+
+        function handleNoteSubmit(e) {
+            e.preventDefault();
+            const text = document.getElementById('note-text').value;
+            const location = document.getElementById('note-location').value;
+            
+            const checkboxes = document.querySelectorAll('input[name="tags"]:checked');
+            const tags = [...Array.from(checkboxes).map(cb => cb.value), ...selectedCustomTags];
+
+            const note = {
+                id: Date.now().toString(),
+                text,
+                location,
+                timestamp: new Date().toISOString(),
+                tags
+            };
+
+            if (!currentRoute.notes) currentRoute.notes = [];
+            currentRoute.notes.push(note);
+            
+            saveState();
+            closeNoteModal();
+            loadRouteData();
+        }
+
+        function deleteNote(id) {
+            if (!confirm('Удалить заметку?')) return;
+            currentRoute.notes = currentRoute.notes.filter(n => n.id !== id);
+            saveState();
+            loadRouteData();
+        }
+
+        // --- Expense Actions ---
+        const expenseFieldsConfig = {
+            food: [
+                { id: 'place', label: 'Заведение', type: 'text', placeholder: 'Название кафе' },
+                { id: 'cuisine', label: 'Кухня', type: 'text', placeholder: 'Итальянская' },
+                { id: 'dish', label: 'Блюдо', type: 'text', placeholder: 'Паста карбонара' },
+                { id: 'rating', label: 'Оценка (1-5)', type: 'number', placeholder: '5' }
+            ],
+            transport: [
+                { id: 'type', label: 'Тип', type: 'select', options: ['Такси', 'Бензин', 'Автобус', 'Поезд', 'Самолет', 'Каршеринг'] },
+                { id: 'mileage', label: 'Пробег (км)', type: 'number', placeholder: '0' },
+                { id: 'route', label: 'Маршрут', type: 'text', placeholder: 'Откуда - Куда' }
+            ],
+            accommodation: [
+                { id: 'name', label: 'Название', type: 'text', placeholder: 'Отель/Хостел' },
+                { id: 'nights', label: 'Ночей', type: 'number', placeholder: '1' },
+                { id: 'comfort', label: 'Комфорт', type: 'select', options: ['Люкс', 'Стандарт', 'Эконом', 'Общий', 'Палатка'] }
+            ],
+            souvenirs: [
+                { id: 'item', label: 'Вещь', type: 'text', placeholder: 'Магнит' },
+                { id: 'place', label: 'Где куплено', type: 'text', placeholder: 'Рынок' },
+                { id: 'for_whom', label: 'Для кого', type: 'text', placeholder: 'Маме' }
+            ],
+            entertainment: [
+                { id: 'activity', label: 'Активность', type: 'text', placeholder: 'Музей' },
+                { id: 'duration', label: 'Длительность', type: 'text', placeholder: '2 часа' },
+                { id: 'impression', label: 'Впечатление', type: 'text', placeholder: 'Круто!' }
+            ],
+            other: [
+                { id: 'comment', label: 'Комментарий', type: 'text', placeholder: '...' }
+            ]
+        };
+
+        function openExpenseModal() {
+            document.getElementById('expense-modal').classList.remove('hidden');
+            setTimeout(() => {
+                document.querySelector('#expense-modal > div').classList.remove('translate-y-full');
+            }, 10);
+            renderExpenseFields();
+        }
+
+        function closeExpenseModal() {
+            document.querySelector('#expense-modal > div').classList.add('translate-y-full');
+            setTimeout(() => {
+                document.getElementById('expense-modal').classList.add('hidden');
+            }, 300);
+            document.getElementById('exp-amount').value = '';
+        }
+
+        function renderExpenseFields() {
+            const category = document.querySelector('input[name="exp-category"]:checked').value;
+            const container = document.getElementById('dynamic-expense-fields');
+            const config = expenseFieldsConfig[category] || [];
+            
+            let html = ``;
+            config.forEach(field => {
+                if (field.type === 'select') {
+                    html += `
+                        <div>
+                            <label class="block text-xs font-medium text-gray-500 mb-1">${field.label}</label>
+                            <select name="exp-${field.id}" class="w-full border border-gray-300 rounded-xl p-3 text-sm bg-white outline-none focus:ring-2 focus:ring-green-500">
+                                ${field.options.map(opt => `<option value="${opt}">${opt}</option>`).join('')}
+                            </select>
+                        </div>
+                    `;
+                } else {
+                    html += `
+                        <div>
+                            <label class="block text-xs font-medium text-gray-500 mb-1">${field.label}</label>
+                            <input type="${field.type}" name="exp-${field.id}" class="w-full border border-gray-300 rounded-xl p-3 text-sm outline-none focus:ring-2 focus:ring-green-500" placeholder="${field.placeholder}">
+                        </div>
+                    `;
+                }
+            });
+            container.innerHTML = html;
+        }
+
+        function handleExpenseSubmit(e) {
+            e.preventDefault();
+            const amount = document.getElementById('exp-amount').value;
+            const category = document.querySelector('input[name="exp-category"]:checked').value;
+            const formData = new FormData(e.target);
+
+            const expense = {
+                id: Date.now().toString(),
+                category,
+                amount,
+                timestamp: new Date().toISOString(),
+                place: formData.get('exp-place'),
+                cuisine: formData.get('exp-cuisine'),
+                dish: formData.get('exp-dish'),
+                rating: formData.get('exp-rating'),
+                type: formData.get('exp-type'),
+                mileage: formData.get('exp-mileage'),
+                route: formData.get('exp-route'),
+                name: formData.get('exp-name'),
+                nights: formData.get('exp-nights'),
+                comfort: formData.get('exp-comfort'),
+                item: formData.get('exp-item'),
+                for_whom: formData.get('exp-for_whom'),
+                activity: formData.get('exp-activity'),
+                duration: formData.get('exp-duration'),
+                impression: formData.get('exp-impression'),
+                comment: formData.get('exp-comment')
+            };
+
+            if (!currentRoute.expenses) currentRoute.expenses = [];
+            currentRoute.expenses.push(expense);
+            
+            saveState();
+            closeExpenseModal();
+            loadRouteData();
+        }
+
+        function deleteExpense(id) {
+            if (!confirm('Удалить расход?')) return;
+            currentRoute.expenses = currentRoute.expenses.filter(e => e.id !== id);
+            saveState();
+            loadRouteData();
+        }
+
+        // --- Waypoint Actions ---
+        function openWaypointModal() {
+            document.getElementById('waypoint-modal').classList.remove('hidden');
+            setTimeout(() => {
+                document.querySelector('#waypoint-modal > div').classList.remove('translate-y-full');
+            }, 10);
+        }
+
+        function closeWaypointModal() {
+            document.querySelector('#waypoint-modal > div').classList.add('translate-y-full');
+            setTimeout(() => {
+                document.getElementById('waypoint-modal').classList.add('hidden');
+            }, 300);
+            document.getElementById('wp-name').value = '';
+            document.getElementById('wp-comment').value = '';
+            document.getElementById('wp-start-segment').checked = false;
+        }
+
+        function handleWaypointSubmit(e) {
+            e.preventDefault();
+            const name = document.getElementById('wp-name').value;
+            const type = document.querySelector('input[name="wp-type"]:checked').value;
+            const comment = document.getElementById('wp-comment').value;
+            const startSegment = document.getElementById('wp-start-segment').checked;
+
+            const waypoint = {
+                id: Date.now().toString(),
+                name,
+                type,
+                comment,
+                visited: false,
+                timestamp: new Date().toISOString(),
+                segmentDuration: null
+            };
+
+            // Handle segment tracking
+            if (startSegment && segmentStart) {
+                // End previous segment
+                const segment = {
+                    id: Date.now().toString() + '-seg',
+                    kind: 'segment',
+                    from: segmentStart.name,
+                    to: name,
+                    startTime: segmentStart.timestamp,
+                    endTime: new Date().toISOString(),
+                    duration: new Date() - new Date(segmentStart.timestamp),
+                    gpsPoints: currentRoute.gpsPoints ? currentRoute.gpsPoints.length : 0,
+                    comment: segmentStart.comment || 'Перемещение'
+                };
+                
+                if (!currentRoute.routeSegments) currentRoute.routeSegments = [];
+                currentRoute.routeSegments.push(segment);
+                
+                // Update previous waypoint with duration
+                const prevWp = currentRoute.waypoints.find(w => w.id === segmentStart.id);
+                if (prevWp) {
+                    prevWp.segmentDuration = segment.duration;
+                }
+                
+                // Clear GPS points
+                currentRoute.gpsPoints = [];
+                
+                showToast(`Отрезок завершен: ${formatDuration(segment.duration)}`);
+            }
+
+            if (!currentRoute.waypoints) currentRoute.waypoints = [];
+            currentRoute.waypoints.push(waypoint);
+            
+            // Set as segment start if checked
+            if (startSegment) {
+                segmentStart = { ...waypoint };
+                showToast('Отслеживание отрезка начато');
+            }
+            
+            saveState();
+            closeWaypointModal();
+            loadRouteData();
+        }
+
+        function toggleWaypointVisited(id) {
+            const wp = currentRoute.waypoints.find(w => w.id === id);
+            if (wp) {
+                wp.visited = !wp.visited;
+                saveState();
+                loadRouteData();
+            }
+        }
+
+        function deleteWaypoint(id) {
+            if (!confirm('Удалить точку?')) return;
+            currentRoute.waypoints = currentRoute.waypoints.filter(w => w.id !== id);
+            saveState();
+            loadRouteData();
+        }
+
+        function openWaypointsModal() {
+            const waypoints = currentRoute.waypoints || [];
+            const container = document.getElementById('waypoints-list');
+            
+            if (waypoints.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-8 text-gray-500">
+                        <p>Нет точек маршрута</p>
+                        <p class="text-xs mt-2">Нажмите + чтобы добавить</p>
+                    </div>
+                `;
+            } else {
+                const typeIcons = { sight: '🏛️', food: '🍽️', stay: '🏨', transport: '🚗', other: '📍' };
+                
+                let html = `<div class="space-y-2">`;
+                waypoints.forEach((wp) => {
+                    html += `
+                        <div class="flex items-center gap-3 p-3 rounded-xl border ${wp.visited ? 'border-green-300 bg-green-50' : 'border-gray-200 bg-white'}">
+                            <input type="checkbox" ${wp.visited ? 'checked' : ''} 
+                                onchange="toggleWaypointVisited('${wp.id}')"
+                                class="w-5 h-5 text-green-600 rounded focus:ring-green-500">
+                            <div class="w-10 h-10 bg-gray-100 rounded-xl flex items-center justify-center text-xl flex-shrink-0">
+                                ${typeIcons[wp.type] || '📍'}
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <div class="font-medium text-sm text-gray-900 truncate">${wp.name}</div>
+                                ${wp.comment ? `<div class="text-xs text-gray-500 truncate">${wp.comment}</div>` : ''}
+                                ${wp.segmentDuration ? `<div class="text-xs text-orange-600 font-medium">⏱️ ${formatDuration(wp.segmentDuration)}</div>` : ''}
+                            </div>
+                            ${wp.visited ? '<span class="text-green-600 text-xs font-bold">✓</span>' : ''}
+                        </div>
+                    `;
+                });
+                html += `</div>`;
+                container.innerHTML = html;
+            }
+            
+            document.getElementById('waypoints-list-modal').classList.remove('hidden');
+            setTimeout(() => {
+                document.querySelector('#waypoints-list-modal > div').classList.remove('translate-y-full');
+            }, 10);
+        }
+
+        function closeWaypointsModal() {
+            document.querySelector('#waypoints-list-modal > div').classList.add('translate-y-full');
+            setTimeout(() => {
+                document.getElementById('waypoints-list-modal').classList.add('hidden');
+            }, 300);
+        }
+
+        // --- View Item Modal ---
+        function closeViewItemModal() {
+            document.querySelector('#view-item-modal > div').classList.add('translate-y-full');
+            setTimeout(() => {
+                document.getElementById('view-item-modal').classList.add('hidden');
+            }, 300);
+        }
+
+        // --- Init ---
+        function init() {
+            loadState();
+            
+            if (state.routes.length === 0) {
+                state.routes.push({
+                    id: 'demo-active-2',
+                    title: 'Алтай, лето 2024',
+                    date: 'Июль - Август 2024',
+                    type: 'active',
+                    waypoints: [
+                        { id: '1', name: 'Перевал Кату-Ярык', type: 'sight', comment: 'Ради невероятного вида', visited: true, timestamp: new Date(Date.now() - 172800000).toISOString(), segmentDuration: 7200000 },
+                        { id: '2', name: 'Чуйский тракт', type: 'transport', comment: 'Одна из красивейших дорог', visited: true, timestamp: new Date(Date.now() - 86400000).toISOString() },
+                        { id: '3', name: 'Глэмпинг у реки', type: 'stay', comment: 'Забронировано на 3 ночи', visited: false, timestamp: new Date(Date.now() - 43200000).toISOString() },
+                        { id: '4', name: 'Кафе у дороги', type: 'food', comment: 'Лучшие хычины', visited: false, timestamp: new Date().toISOString() }
+                    ],
+                    notes: [
+                        { 
+                            id: 'n1', 
+                            text: 'Перевал Кату-Ярык — это нечто! Виды просто космос. Туристов много, но оно того стоит. Сделал кучу фото.', 
+                            location: 'Перевал Кату-Ярык', 
+                            timestamp: new Date(Date.now() - 172800000).toISOString(),
+                            tags: ['#пост', '#гайд', '#алтай2024']
+                        },
+                        { 
+                            id: 'n2', 
+                            text: 'Заправились на Чуйском тракте. Бензин дороже чем дома, но выбора нет. Дорога потрясающая!', 
+                            location: 'Чуйский тракт, 756 км', 
+                            timestamp: new Date(Date.now() - 86400000).toISOString(),
+                            tags: ['#идея', '#транспорт']
+                        }
+                    ],
+                    expenses: [
+                        { 
+                            id: 'e1', 
+                            category: 'transport', 
+                            amount: '2500', 
+                            timestamp: new Date(Date.now() - 172800000).toISOString(),
+                            type: 'Бензин',
+                            mileage: '450',
+                            route: 'Горно-Алтайск — Акташ'
+                        },
+                        { 
+                            id: 'e2', 
+                            category: 'food', 
+                            amount: '1200', 
+                            timestamp: new Date(Date.now() - 86400000).toISOString(),
+                            place: 'Кафе у дороги',
+                            dish: 'Хычины + чай',
+                            rating: '5'
+                        }
+                    ],
+                    routeSegments: [
+                        {
+                            id: 's1',
+                            from: 'Перевал Кату-Ярык',
+                            to: 'Чуйский тракт',
+                            startTime: new Date(Date.now() - 172800000).toISOString(),
+                            endTime: new Date(Date.now() - 165600000).toISOString(),
+                            duration: 7200000,
+                            gpsPoints: 145,
+                            comment: 'Спуск с перевала'
+                        }
+                    ],
+                    gpsPoints: []
+                });
+                state.customTags = ['#алтай2024', '#транспорт', '#горы', '#еда'];
+                saveState();
+            }
+            
+            currentRouteId = state.routes[0].id;
+            loadRouteData();
+            
+            setInterval(updateTime, 60000);
+        }
+
+        init();
+    </script>
+</body>
+</html>
+

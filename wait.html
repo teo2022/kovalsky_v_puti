@@ -1,0 +1,864 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Планируемый маршрут - Дневник путешественника от Ковальского</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f0f2f5; }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        .fade-in { animation: fadeIn 0.3s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .slide-up { animation: slideUp 0.3s ease-out; }
+        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+        
+        .custom-scroll::-webkit-scrollbar { width: 6px; }
+        .custom-scroll::-webkit-scrollbar-track { background: #f1f1f1; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+        .custom-scroll::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        .gradient-blue { background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); }
+        .gradient-blue-light { background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%); }
+        
+        .waypoint-card { transition: all 0.2s ease; }
+        .waypoint-card:hover { transform: translateY(-2px); box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1); }
+        
+        .toast { animation: toastIn 0.3s ease-out, toastOut 0.3s ease-in 2.7s; }
+        @keyframes toastIn { from { transform: translateY(100px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @keyframes toastOut { from { transform: translateY(0); opacity: 1; } to { transform: translateY(100px); opacity: 0; } }
+    </style>
+</head>
+<body class="h-screen flex flex-col overflow-hidden">
+
+    <!-- App Container -->
+    <div id="app" class="flex-1 flex flex-col h-full max-w-lg mx-auto w-full bg-white shadow-2xl relative overflow-hidden">
+        
+        <!-- Header -->
+        <header class="gradient-blue text-white p-6 pb-24 rounded-b-3xl shadow-lg z-10">
+            <div class="flex items-center gap-3 mb-4">
+                <button onclick="goBack()" class="bg-white/20 hover:bg-white/30 backdrop-blur-sm p-2.5 rounded-xl transition-all">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                    </svg>
+                </button>
+                <div class="flex-1">
+                    <p class="text-blue-200 text-xs font-medium uppercase tracking-wider mb-1">Планируемый маршрут</p>
+                    <h1 class="text-xl font-bold" id="route-title">Загрузка...</h1>
+                </div>
+                <button onclick="resetAllData()" class="bg-red-500/80 hover:bg-red-600 backdrop-blur-sm p-2.5 rounded-xl transition-all" title="Сбросить все данные">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                </button>
+            </div>
+            
+            <div class="flex items-center gap-2 text-blue-100 text-sm">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                </svg>
+                <span id="route-date">...</span>
+            </div>
+        </header>
+
+        <!-- Action Buttons -->
+        <div class="px-4 -mt-16 relative z-20">
+            <div class="bg-white rounded-2xl shadow-lg p-3 grid grid-cols-3 gap-2">
+                <button onclick="openWaypointModal()" class="flex flex-col items-center gap-2 p-3 rounded-xl hover:bg-blue-50 transition-colors">
+                    <div class="w-10 h-10 gradient-blue-light rounded-xl flex items-center justify-center text-white shadow-md">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                        </svg>
+                    </div>
+                    <span class="text-xs font-medium text-gray-700">Точка</span>
+                </button>
+                <button onclick="openDraftModal()" class="flex flex-col items-center gap-2 p-3 rounded-xl hover:bg-blue-50 transition-colors">
+                    <div class="w-10 h-10 gradient-blue-light rounded-xl flex items-center justify-center text-white shadow-md">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                        </svg>
+                    </div>
+                    <span class="text-xs font-medium text-gray-700">Черновик</span>
+                </button>
+                <button onclick="openChecklistModal()" class="flex flex-col items-center gap-2 p-3 rounded-xl hover:bg-blue-50 transition-colors">
+                    <div class="w-10 h-10 gradient-blue-light rounded-xl flex items-center justify-center text-white shadow-md">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
+                        </svg>
+                    </div>
+                    <span class="text-xs font-medium text-gray-700">Чек-лист</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Content Tabs -->
+        <div class="px-4 mt-4">
+            <div class="flex gap-2 border-b border-gray-200">
+                <button onclick="switchTab('waypoints')" class="tab-btn pb-3 px-2 text-sm font-medium border-b-2 border-blue-600 text-blue-600 transition-all" data-tab="waypoints">
+                    📍 Точки <span class="bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full text-xs ml-1" id="waypoints-count">0</span>
+                </button>
+                <button onclick="switchTab('drafts')" class="tab-btn pb-3 px-2 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 transition-all" data-tab="drafts">
+                    📝 Черновики <span class="bg-gray-100 text-gray-700 px-2 py-0.5 rounded-full text-xs ml-1" id="drafts-count">0</span>
+                </button>
+                <button onclick="switchTab('checklists')" class="tab-btn pb-3 px-2 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 transition-all" data-tab="checklists">
+                    ✅ Списки <span class="bg-gray-100 text-gray-700 px-2 py-0.5 rounded-full text-xs ml-1" id="checklists-count">0</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Main Content Area -->
+        <main id="main-view" class="flex-1 overflow-y-auto custom-scroll relative p-4 pb-8">
+            <!-- Dynamic Content -->
+        </main>
+
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-20 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white px-6 py-3 rounded-xl shadow-lg z-50 hidden toast">
+        <span id="toast-message">Сохранено!</span>
+    </div>
+
+    <!-- Waypoint Modal -->
+    <div id="waypoint-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-end sm:items-center justify-center backdrop-blur-sm">
+        <div class="bg-white w-full max-w-md rounded-t-3xl sm:rounded-2xl p-6 shadow-2xl transform transition-transform duration-300 translate-y-full sm:translate-y-0 slide-up">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-lg font-bold text-gray-900">Новая точка маршрута</h3>
+                <button onclick="closeWaypointModal()" class="text-gray-400 hover:text-gray-600 p-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            
+            <form onsubmit="handleWaypointSubmit(event)" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Название места *</label>
+                    <input type="text" id="wp-name" required placeholder="Например: Перевал Кату-Ярык" class="w-full border border-gray-300 rounded-xl p-3.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Тип точки</label>
+                    <div class="grid grid-cols-5 gap-2">
+                        <label class="cursor-pointer">
+                            <input type="radio" name="wp-type" value="sight" class="peer sr-only" checked>
+                            <div class="border-2 border-gray-200 rounded-xl p-2 text-center peer-checked:border-blue-500 peer-checked:bg-blue-50 transition-all">
+                                <div class="text-lg">🏛️</div>
+                                <div class="text-[10px]">Обзор</div>
+                            </div>
+                        </label>
+                        <label class="cursor-pointer">
+                            <input type="radio" name="wp-type" value="food" class="peer sr-only">
+                            <div class="border-2 border-gray-200 rounded-xl p-2 text-center peer-checked:border-blue-500 peer-checked:bg-blue-50 transition-all">
+                                <div class="text-lg">🍽️</div>
+                                <div class="text-[10px]">Еда</div>
+                            </div>
+                        </label>
+                        <label class="cursor-pointer">
+                            <input type="radio" name="wp-type" value="stay" class="peer sr-only">
+                            <div class="border-2 border-gray-200 rounded-xl p-2 text-center peer-checked:border-blue-500 peer-checked:bg-blue-50 transition-all">
+                                <div class="text-lg">🏨</div>
+                                <div class="text-[10px]">Ночь</div>
+                            </div>
+                        </label>
+                        <label class="cursor-pointer">
+                            <input type="radio" name="wp-type" value="transport" class="peer sr-only">
+                            <div class="border-2 border-gray-200 rounded-xl p-2 text-center peer-checked:border-blue-500 peer-checked:bg-blue-50 transition-all">
+                                <div class="text-lg">🚗</div>
+                                <div class="text-[10px]">Транс</div>
+                            </div>
+                        </label>
+                        <label class="cursor-pointer">
+                            <input type="radio" name="wp-type" value="other" class="peer sr-only">
+                            <div class="border-2 border-gray-200 rounded-xl p-2 text-center peer-checked:border-blue-500 peer-checked:bg-blue-50 transition-all">
+                                <div class="text-lg">📍</div>
+                                <div class="text-[10px]">Другое</div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Зачем едем? (комментарий)</label>
+                    <textarea id="wp-comment" rows="2" placeholder="Кратко: ради вида, поесть, переночевать..." class="w-full border border-gray-300 rounded-xl p-3.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none resize-none"></textarea>
+                </div>
+
+                <div class="pt-2">
+                    <button type="submit" class="w-full gradient-blue text-white font-bold py-4 rounded-xl shadow-lg hover:shadow-xl transform active:scale-[0.98] transition-all">
+                        Добавить точку
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Draft Modal -->
+    <div id="draft-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-end sm:items-center justify-center backdrop-blur-sm">
+        <div class="bg-white w-full max-w-md rounded-t-3xl sm:rounded-2xl p-6 shadow-2xl transform transition-transform duration-300 translate-y-full sm:translate-y-0 slide-up">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-lg font-bold text-gray-900">Черновик поста</h3>
+                <button onclick="closeDraftModal()" class="text-gray-400 hover:text-gray-600 p-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            
+            <form onsubmit="handleDraftSubmit(event)" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Тема поста *</label>
+                    <input type="text" id="draft-title" required placeholder="О чем рассказать?" class="w-full border border-gray-300 rounded-xl p-3.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Заметки для поста</label>
+                    <textarea id="draft-content" rows="5" placeholder="Ключевые моменты, факты, идеи..." class="w-full border border-gray-300 rounded-xl p-3.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none resize-none"></textarea>
+                </div>
+
+                <div class="pt-2">
+                    <button type="submit" class="w-full gradient-blue text-white font-bold py-4 rounded-xl shadow-lg hover:shadow-xl transform active:scale-[0.98] transition-all">
+                        Сохранить черновик
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Checklist Modal -->
+    <div id="checklist-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-end sm:items-center justify-center backdrop-blur-sm">
+        <div class="bg-white w-full max-w-md rounded-t-3xl sm:rounded-2xl p-6 shadow-2xl transform transition-transform duration-300 translate-y-full sm:translate-y-0 slide-up">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-lg font-bold text-gray-900">Новый чек-лист</h3>
+                <button onclick="closeChecklistModal()" class="text-gray-400 hover:text-gray-600 p-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            
+            <form onsubmit="handleChecklistSubmit(event)" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Название списка *</label>
+                    <input type="text" id="checklist-title" required placeholder="Например: Документы, Вещи, Контакты" class="w-full border border-gray-300 rounded-xl p-3.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Пункты списка</label>
+                    <div id="checklist-items-container" class="space-y-2">
+                        <div class="flex gap-2">
+                            <input type="text" name="checklist-item[]" placeholder="Пункт 1" class="flex-1 border border-gray-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                        </div>
+                    </div>
+                    <button type="button" onclick="addChecklistItem()" class="mt-2 text-sm text-blue-600 font-medium flex items-center gap-1">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                        </svg>
+                        Добавить пункт
+                    </button>
+                </div>
+
+                <div class="pt-2">
+                    <button type="submit" class="w-full gradient-blue text-white font-bold py-4 rounded-xl shadow-lg hover:shadow-xl transform active:scale-[0.98] transition-all">
+                        Создать список
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- View Item Modal -->
+    <div id="view-item-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-end sm:items-center justify-center backdrop-blur-sm">
+        <div class="bg-white w-full max-w-md rounded-t-3xl sm:rounded-2xl p-6 shadow-2xl transform transition-transform duration-300 translate-y-full sm:translate-y-0 slide-up">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-bold text-gray-900" id="view-item-title">Просмотр</h3>
+                <button onclick="closeViewItemModal()" class="text-gray-400 hover:text-gray-600 p-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            <div id="view-item-content" class="text-sm text-gray-700"></div>
+        </div>
+    </div>
+
+    <script>
+        // --- State Management ---
+        const STORAGE_KEY = 'kowalski_travel_diary_planned_v1';
+        
+        let state = {
+            routes: [],
+            spontaneousNotes: []
+        };
+
+        let currentRouteId = null;
+        let currentRoute = null;
+        let currentTab = 'waypoints';
+
+        // --- Storage Functions ---
+        function loadState() {
+            try {
+                const saved = localStorage.getItem(STORAGE_KEY);
+                if (saved) {
+                    state = JSON.parse(saved);
+                }
+            } catch (e) {
+                console.error('Error loading state:', e);
+                state = { routes: [], spontaneousNotes: [] };
+            }
+        }
+
+        function saveState() {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+                showToast('Данные сохранены!');
+            } catch (e) {
+                console.error('Error saving state:', e);
+                showToast('Ошибка сохранения!');
+            }
+        }
+
+        function resetAllData() {
+            if (confirm('Вы уверены? Все данные будут удалены!')) {
+                localStorage.removeItem(STORAGE_KEY);
+                state = { routes: [], spontaneousNotes: [] };
+                init();
+                showToast('Данные сброшены');
+            }
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-message').textContent = message;
+            toast.classList.remove('hidden');
+            setTimeout(() => {
+                toast.classList.add('hidden');
+            }, 3000);
+        }
+
+        // --- Route Management ---
+        function loadRouteData() {
+            if (currentRouteId) {
+                currentRoute = state.routes.find(r => r.id === currentRouteId);
+                if (currentRoute) {
+                    document.getElementById('route-title').textContent = currentRoute.title;
+                    document.getElementById('route-date').textContent = currentRoute.date;
+                    updateCounts();
+                    renderTab();
+                }
+            }
+        }
+
+        function updateCounts() {
+            if (!currentRoute) return;
+            document.getElementById('waypoints-count').textContent = (currentRoute.waypoints || []).length;
+            document.getElementById('drafts-count').textContent = (currentRoute.drafts || []).length;
+            document.getElementById('checklists-count').textContent = (currentRoute.checklists || []).length;
+        }
+
+        // --- Navigation ---
+        function goBack() {
+            // Show route selection or create new route
+            const routeId = prompt('Введите ID маршрута или название для создания нового:', currentRouteId || '');
+            if (routeId) {
+                // Check if route exists
+                let route = state.routes.find(r => r.id === routeId || r.title === routeId);
+                if (!route) {
+                    // Create new route
+                    const title = routeId;
+                    const date = prompt('Дата поездки:', new Date().toLocaleDateString('ru-RU'));
+                    if (title && date) {
+                        route = {
+                            id: Date.now().toString(),
+                            title,
+                            date,
+                            type: 'planned',
+                            waypoints: [],
+                            drafts: [],
+                            checklists: []
+                        };
+                        state.routes.push(route);
+                        saveState();
+                    }
+                }
+                if (route) {
+                    currentRouteId = route.id;
+                    loadRouteData();
+                }
+            }
+        }
+
+        function switchTab(tab) {
+            currentTab = tab;
+            
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                const isActive = btn.dataset.tab === tab;
+                if (isActive) {
+                    btn.classList.remove('border-transparent', 'text-gray-500');
+                    btn.classList.add('border-blue-600', 'text-blue-600');
+                } else {
+                    btn.classList.add('border-transparent', 'text-gray-500');
+                    btn.classList.remove('border-blue-600', 'text-blue-600');
+                }
+            });
+            
+            renderTab();
+        }
+
+        function renderTab() {
+            const main = document.getElementById('main-view');
+            
+            if (currentTab === 'waypoints') {
+                renderWaypoints(main);
+            } else if (currentTab === 'drafts') {
+                renderDrafts(main);
+            } else if (currentTab === 'checklists') {
+                renderChecklists(main);
+            }
+        }
+
+        // --- Waypoints View ---
+        function renderWaypoints(container) {
+            const waypoints = currentRoute.waypoints || [];
+            
+            if (waypoints.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-16 fade-in">
+                        <div class="w-20 h-20 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <svg class="w-10 h-10 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                            </svg>
+                        </div>
+                        <h3 class="font-medium text-gray-700 mb-1">Нет точек маршрута</h3>
+                        <p class="text-sm text-gray-500 mb-4">Нажмите "Точка" чтобы добавить</p>
+                        <button onclick="openWaypointModal()" class="gradient-blue text-white px-6 py-2.5 rounded-xl text-sm font-medium shadow-md">
+                            + Добавить точку
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+
+            const typeIcons = { sight: '🏛️', food: '🍽️', stay: '🏨', transport: '🚗', other: '📍' };
+            
+            let html = `<div class="space-y-3 fade-in">`;
+            waypoints.forEach((wp, idx) => {
+                html += `
+                    <div class="waypoint-card bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
+                        <div class="flex gap-4">
+                            <div class="flex flex-col items-center">
+                                <div class="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center text-xl flex-shrink-0">
+                                    ${typeIcons[wp.type] || '📍'}
+                                </div>
+                                <div class="w-0.5 h-full bg-gray-200 mt-2 ${idx === waypoints.length - 1 ? 'hidden' : ''}"></div>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <div class="flex justify-between items-start">
+                                    <div>
+                                        <h4 class="font-bold text-gray-900 truncate">${wp.name}</h4>
+                                        <span class="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded mt-1 inline-block">${getTypeLabel(wp.type)}</span>
+                                    </div>
+                                    <span class="text-xs text-gray-400 flex-shrink-0">#${idx + 1}</span>
+                                </div>
+                                ${wp.comment ? `<p class="text-sm text-gray-600 mt-2 line-clamp-2">${wp.comment}</p>` : ''}
+                                <div class="flex gap-3 mt-3 pt-3 border-t border-gray-100">
+                                    <button onclick="editWaypoint(${idx})" class="text-xs text-blue-600 font-medium hover:text-blue-700">Ред.</button>
+                                    <button onclick="deleteWaypoint(${idx})" class="text-xs text-red-500 font-medium hover:text-red-600">Удалить</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            html += `</div>`;
+            container.innerHTML = html;
+        }
+
+        function getTypeLabel(type) {
+            const labels = { sight: 'Достопримечательность', food: 'Еда', stay: 'Ночевка', transport: 'Транспорт', other: 'Другое' };
+            return labels[type] || type;
+        }
+
+        // --- Drafts View ---
+        function renderDrafts(container) {
+            const drafts = currentRoute.drafts || [];
+            
+            if (drafts.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-16 fade-in">
+                        <div class="w-20 h-20 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <svg class="w-10 h-10 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                            </svg>
+                        </div>
+                        <h3 class="font-medium text-gray-700 mb-1">Нет черновиков</h3>
+                        <p class="text-sm text-gray-500 mb-4">Нажмите "Черновик" чтобы добавить</p>
+                        <button onclick="openDraftModal()" class="gradient-blue text-white px-6 py-2.5 rounded-xl text-sm font-medium shadow-md">
+                            + Добавить черновик
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+
+            let html = `<div class="space-y-3 fade-in">`;
+            drafts.forEach((draft, idx) => {
+                const date = new Date(draft.createdAt).toLocaleDateString('ru-RU');
+                html += `
+                    <div onclick="viewDraft(${idx})" class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 cursor-pointer hover:shadow-md transition-all">
+                        <div class="flex justify-between items-start mb-2">
+                            <h4 class="font-bold text-gray-900">${draft.title}</h4>
+                            <span class="text-xs text-gray-400 flex-shrink-0">${date}</span>
+                        </div>
+                        <p class="text-sm text-gray-600 line-clamp-2">${draft.content || 'Без содержания'}</p>
+                        <div class="flex gap-3 mt-3 pt-3 border-t border-gray-100">
+                            <button onclick="event.stopPropagation(); editDraft(${idx})" class="text-xs text-blue-600 font-medium hover:text-blue-700">Ред.</button>
+                            <button onclick="event.stopPropagation(); deleteDraft(${idx})" class="text-xs text-red-500 font-medium hover:text-red-600">Удалить</button>
+                        </div>
+                    </div>
+                `;
+            });
+            html += `</div>`;
+            container.innerHTML = html;
+        }
+
+        // --- Checklists View ---
+        function renderChecklists(container) {
+            const checklists = currentRoute.checklists || [];
+            
+            if (checklists.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-16 fade-in">
+                        <div class="w-20 h-20 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <svg class="w-10 h-10 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                            </svg>
+                        </div>
+                        <h3 class="font-medium text-gray-700 mb-1">Нет чек-листов</h3>
+                        <p class="text-sm text-gray-500 mb-4">Нажмите "Чек-лист" чтобы добавить</p>
+                        <button onclick="openChecklistModal()" class="gradient-blue text-white px-6 py-2.5 rounded-xl text-sm font-medium shadow-md">
+                            + Создать список
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+
+            let html = `<div class="space-y-3 fade-in">`;
+            checklists.forEach((list, idx) => {
+                const completedCount = (list.items || []).filter(i => i.checked).length;
+                const totalCount = (list.items || []).length;
+                const progress = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
+                
+                html += `
+                    <div onclick="viewChecklist(${idx})" class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 cursor-pointer hover:shadow-md transition-all">
+                        <div class="flex justify-between items-start mb-3">
+                            <h4 class="font-bold text-gray-900">${list.title}</h4>
+                            <span class="text-xs font-medium ${progress === 100 ? 'text-green-600' : 'text-blue-600'}">${progress}%</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-2 mb-3">
+                            <div class="gradient-blue h-2 rounded-full transition-all" style="width: ${progress}%"></div>
+                        </div>
+                        <p class="text-xs text-gray-500">${completedCount} из ${totalCount} выполнено</p>
+                        <div class="flex gap-3 mt-3 pt-3 border-t border-gray-100">
+                            <button onclick="event.stopPropagation(); editChecklist(${idx})" class="text-xs text-blue-600 font-medium hover:text-blue-700">Ред.</button>
+                            <button onclick="event.stopPropagation(); deleteChecklist(${idx})" class="text-xs text-red-500 font-medium hover:text-red-600">Удалить</button>
+                        </div>
+                    </div>
+                `;
+            });
+            html += `</div>`;
+            container.innerHTML = html;
+        }
+
+        // --- Waypoint Actions ---
+        function openWaypointModal() {
+            document.getElementById('waypoint-modal').classList.remove('hidden');
+            setTimeout(() => {
+                document.querySelector('#waypoint-modal > div').classList.remove('translate-y-full');
+            }, 10);
+        }
+
+        function closeWaypointModal() {
+            document.querySelector('#waypoint-modal > div').classList.add('translate-y-full');
+            setTimeout(() => {
+                document.getElementById('waypoint-modal').classList.add('hidden');
+            }, 300);
+            document.getElementById('wp-name').value = '';
+            document.getElementById('wp-comment').value = '';
+        }
+
+        function handleWaypointSubmit(e) {
+            e.preventDefault();
+            const name = document.getElementById('wp-name').value;
+            const type = document.querySelector('input[name="wp-type"]:checked').value;
+            const comment = document.getElementById('wp-comment').value;
+
+            if (!currentRoute.waypoints) currentRoute.waypoints = [];
+            currentRoute.waypoints.push({ name, type, comment });
+            
+            saveState();
+            closeWaypointModal();
+            loadRouteData();
+        }
+
+        function deleteWaypoint(index) {
+            if (!confirm('Удалить эту точку?')) return;
+            currentRoute.waypoints.splice(index, 1);
+            saveState();
+            loadRouteData();
+        }
+
+        function editWaypoint(index) {
+            const wp = currentRoute.waypoints[index];
+            document.getElementById('wp-name').value = wp.name;
+            document.getElementById('wp-comment').value = wp.comment || '';
+            const radio = document.querySelector(`input[name="wp-type"][value="${wp.type}"]`);
+            if (radio) radio.checked = true;
+            
+            currentRoute.waypoints.splice(index, 1);
+            saveState();
+            openWaypointModal();
+        }
+
+        // --- Draft Actions ---
+        function openDraftModal() {
+            document.getElementById('draft-modal').classList.remove('hidden');
+            setTimeout(() => {
+                document.querySelector('#draft-modal > div').classList.remove('translate-y-full');
+            }, 10);
+        }
+
+        function closeDraftModal() {
+            document.querySelector('#draft-modal > div').classList.add('translate-y-full');
+            setTimeout(() => {
+                document.getElementById('draft-modal').classList.add('hidden');
+            }, 300);
+            document.getElementById('draft-title').value = '';
+            document.getElementById('draft-content').value = '';
+        }
+
+        function handleDraftSubmit(e) {
+            e.preventDefault();
+            const title = document.getElementById('draft-title').value;
+            const content = document.getElementById('draft-content').value;
+
+            if (!currentRoute.drafts) currentRoute.drafts = [];
+            currentRoute.drafts.push({ 
+                title, 
+                content, 
+                createdAt: new Date().toISOString() 
+            });
+            
+            saveState();
+            closeDraftModal();
+            loadRouteData();
+        }
+
+        function viewDraft(index) {
+            const draft = currentRoute.drafts[index];
+            const date = new Date(draft.createdAt).toLocaleDateString('ru-RU', { 
+                day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit'
+            });
+            
+            document.getElementById('view-item-title').textContent = draft.title;
+            document.getElementById('view-item-content').innerHTML = `
+                <p class="text-xs text-gray-400 mb-4">Создано: ${date}</p>
+                <div class="whitespace-pre-line bg-gray-50 p-4 rounded-xl">${draft.content || 'Нет содержания'}</div>
+            `;
+            
+            document.getElementById('view-item-modal').classList.remove('hidden');
+            setTimeout(() => {
+                document.querySelector('#view-item-modal > div').classList.remove('translate-y-full');
+            }, 10);
+        }
+
+        function closeViewItemModal() {
+            document.querySelector('#view-item-modal > div').classList.add('translate-y-full');
+            setTimeout(() => {
+                document.getElementById('view-item-modal').classList.add('hidden');
+            }, 300);
+        }
+
+        function deleteDraft(index) {
+            if (!confirm('Удалить этот черновик?')) return;
+            currentRoute.drafts.splice(index, 1);
+            saveState();
+            loadRouteData();
+        }
+
+        function editDraft(index) {
+            const draft = currentRoute.drafts[index];
+            document.getElementById('draft-title').value = draft.title;
+            document.getElementById('draft-content').value = draft.content || '';
+            
+            currentRoute.drafts.splice(index, 1);
+            saveState();
+            openDraftModal();
+        }
+
+        // --- Checklist Actions ---
+        function openChecklistModal() {
+            document.getElementById('checklist-modal').classList.remove('hidden');
+            setTimeout(() => {
+                document.querySelector('#checklist-modal > div').classList.remove('translate-y-full');
+            }, 10);
+            document.getElementById('checklist-items-container').innerHTML = `
+                <div class="flex gap-2">
+                    <input type="text" name="checklist-item[]" placeholder="Пункт 1" class="flex-1 border border-gray-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                </div>
+            `;
+        }
+
+        function closeChecklistModal() {
+            document.querySelector('#checklist-modal > div').classList.add('translate-y-full');
+            setTimeout(() => {
+                document.getElementById('checklist-modal').classList.add('hidden');
+            }, 300);
+            document.getElementById('checklist-title').value = '';
+        }
+
+        function addChecklistItem() {
+            const container = document.getElementById('checklist-items-container');
+            const count = container.querySelectorAll('input').length + 1;
+            const div = document.createElement('div');
+            div.className = 'flex gap-2';
+            div.innerHTML = `
+                <input type="text" name="checklist-item[]" placeholder="Пункт ${count}" class="flex-1 border border-gray-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                <button type="button" onclick="this.parentElement.remove()" class="text-red-500 hover:text-red-600 p-3">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                    </svg>
+                </button>
+            `;
+            container.appendChild(div);
+        }
+
+        function handleChecklistSubmit(e) {
+            e.preventDefault();
+            const title = document.getElementById('checklist-title').value;
+            const itemInputs = document.querySelectorAll('input[name="checklist-item[]"]');
+            const items = Array.from(itemInputs)
+                .map(input => input.value.trim())
+                .filter(value => value)
+                .map(value => ({ text: value, checked: false }));
+
+            if (!currentRoute.checklists) currentRoute.checklists = [];
+            currentRoute.checklists.push({ title, items });
+            
+            saveState();
+            closeChecklistModal();
+            loadRouteData();
+        }
+
+        function viewChecklist(index) {
+            const list = currentRoute.checklists[index];
+            
+            let html = `<div class="space-y-2">`;
+            list.items.forEach((item, idx) => {
+                html += `
+                    <label class="flex items-center gap-3 p-3 bg-gray-50 rounded-xl cursor-pointer hover:bg-gray-100 transition-colors">
+                        <input type="checkbox" ${item.checked ? 'checked' : ''} 
+                            onchange="toggleChecklistItem(${index}, ${idx})"
+                            class="w-5 h-5 text-blue-600 rounded focus:ring-blue-500">
+                        <span class="${item.checked ? 'line-through text-gray-400' : 'text-gray-700'} flex-1">${item.text}</span>
+                    </label>
+                `;
+            });
+            html += `</div>`;
+            
+            document.getElementById('view-item-title').textContent = list.title;
+            document.getElementById('view-item-content').innerHTML = html;
+            
+            document.getElementById('view-item-modal').classList.remove('hidden');
+            setTimeout(() => {
+                document.querySelector('#view-item-modal > div').classList.remove('translate-y-full');
+            }, 10);
+        }
+
+        function toggleChecklistItem(listIndex, itemIndex) {
+            currentRoute.checklists[listIndex].items[itemIndex].checked = 
+                !currentRoute.checklists[listIndex].items[itemIndex].checked;
+            saveState();
+            viewChecklist(listIndex);
+        }
+
+        function deleteChecklist(index) {
+            if (!confirm('Удалить этот список?')) return;
+            currentRoute.checklists.splice(index, 1);
+            saveState();
+            loadRouteData();
+        }
+
+        function editChecklist(index) {
+            const list = currentRoute.checklists[index];
+            document.getElementById('checklist-title').value = list.title;
+            
+            const container = document.getElementById('checklist-items-container');
+            container.innerHTML = '';
+            list.items.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'flex gap-2';
+                div.innerHTML = `
+                    <input type="text" name="checklist-item[]" value="${item.text}" class="flex-1 border border-gray-300 rounded-xl p-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                    <button type="button" onclick="this.parentElement.remove()" class="text-red-500 hover:text-red-600 p-3">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                        </svg>
+                    </button>
+                `;
+                container.appendChild(div);
+            });
+            
+            currentRoute.checklists.splice(index, 1);
+            saveState();
+            openChecklistModal();
+        }
+
+        // --- Init ---
+        function init() {
+            loadState();
+            
+            // If no routes exist, create demo route
+            if (state.routes.length === 0) {
+                state.routes.push({
+                    id: 'demo',
+                    title: 'Алтай, лето 2024',
+                    date: 'Июль - Август 2024',
+                    type: 'planned',
+                    waypoints: [
+                        { name: 'Перевал Кату-Ярык', type: 'sight', comment: 'Ради невероятного вида на долину' },
+                        { name: 'Чуйский тракт', type: 'transport', comment: 'Одна из красивейших дорог мира' },
+                        { name: 'Глэмпинг у реки', type: 'stay', comment: 'Забронировано на 3 ночи' }
+                    ],
+                    drafts: [
+                        { title: 'О чем рассказать про Чуйский тракт', content: 'История дороги\nЛучшие остановки для фото\nГде поесть по пути', createdAt: new Date().toISOString() }
+                    ],
+                    checklists: [
+                        { 
+                            title: 'Документы', 
+                            items: [
+                                { text: 'Паспорта', checked: true },
+                                { text: 'Права', checked: true },
+                                { text: 'Страховка', checked: false },
+                                { text: 'Бронь жилья', checked: false }
+                            ]
+                        }
+                    ]
+                });
+                saveState();
+            }
+            
+            currentRouteId = state.routes[0].id;
+            loadRouteData();
+        }
+
+        // Start the app
+        init();
+    </script>
+</body>
+</html>
+

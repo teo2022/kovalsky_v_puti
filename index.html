@@ -1,0 +1,1025 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Экспорт и Спонтанные заметки - Дневник путешественника от Ковальского</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f0f2f5; }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        .fade-in { animation: fadeIn 0.3s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .slide-up { animation: slideUp 0.3s ease-out; }
+        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+        
+        .custom-scroll::-webkit-scrollbar { width: 6px; }
+        .custom-scroll::-webkit-scrollbar-track { background: #f1f1f1; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+        .custom-scroll::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        .gradient-blue { background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); }
+        .gradient-green { background: linear-gradient(135deg, #22c55e 0%, #15803d 100%); }
+        .gradient-yellow { background: linear-gradient(135deg, #eab308 0%, #a16207 100%); }
+        .gradient-purple { background: linear-gradient(135deg, #a855f7 0%, #7c3aed 100%); }
+        .gradient-orange { background: linear-gradient(135deg, #f97316 0%, #c2410c 100%); }
+        
+        .toast { animation: toastIn 0.3s ease-out, toastOut 0.3s ease-in 2.7s; }
+        @keyframes toastIn { from { transform: translateY(100px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @keyframes toastOut { from { transform: translateY(0); opacity: 1; } to { transform: translateY(100px); opacity: 0; } }
+
+        .tag-checkbox:checked + span {
+            background-color: #3b82f6;
+            color: white;
+        }
+
+        .export-card {
+            transition: all 0.2s ease;
+        }
+        .export-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body class="h-screen flex flex-col overflow-hidden">
+
+    <!-- App Container -->
+    <div id="app" class="flex-1 flex flex-col h-full max-w-lg mx-auto w-full bg-white shadow-2xl relative overflow-hidden">
+        
+        <!-- Header -->
+        <header class="gradient-purple text-white p-6 pb-8 rounded-b-3xl shadow-lg z-10">
+            <div class="flex items-center gap-3 mb-4">
+                <button onclick="goBack()" class="bg-white/20 hover:bg-white/30 backdrop-blur-sm p-2.5 rounded-xl transition-all">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                    </svg>
+                </button>
+                <div class="flex-1">
+                    <p class="text-purple-200 text-xs font-medium uppercase tracking-wider mb-1">Дневник путешественника</p>
+                    <h1 class="text-xl font-bold">от Ковальского</h1>
+                </div>
+            </div>
+            
+            <!-- Quick Stats -->
+            <div class="flex gap-3 mt-4">
+                <div class="bg-white/10 backdrop-blur-sm rounded-xl px-4 py-2 flex-1">
+                    <p class="text-purple-200 text-xs">Маршрутов</p>
+                    <p class="text-xl font-bold" id="stat-routes">0</p>
+                </div>
+                <div class="bg-white/10 backdrop-blur-sm rounded-xl px-4 py-2 flex-1">
+                    <p class="text-purple-200 text-xs">Заметок</p>
+                    <p class="text-xl font-bold" id="stat-notes">0</p>
+                </div>
+                <div class="bg-white/10 backdrop-blur-sm rounded-xl px-4 py-2 flex-1">
+                    <p class="text-purple-200 text-xs">Расходов</p>
+                    <p class="text-xl font-bold" id="stat-expenses">0</p>
+                </div>
+            </div>
+        </header>
+
+        <!-- Navigation Tabs -->
+        <div class="px-4 -mt-4 relative z-10">
+            <div class="bg-white rounded-2xl shadow-lg p-1.5 flex gap-1">
+                <button onclick="switchView('export')" class="view-btn flex-1 py-2.5 rounded-xl text-sm font-medium transition-all bg-purple-50 text-purple-700" data-view="export">
+                    📤 Экспорт
+                </button>
+                <button onclick="switchView('spontaneous')" class="view-btn flex-1 py-2.5 rounded-xl text-sm font-medium transition-all text-gray-500 hover:bg-gray-50" data-view="spontaneous">
+                    ⚡ Спонтан
+                </button>
+                <button onclick="switchView('routes')" class="view-btn flex-1 py-2.5 rounded-xl text-sm font-medium transition-all text-gray-500 hover:bg-gray-50" data-view="routes">
+                    🗺️ Маршруты
+                </button>
+            </div>
+        </div>
+
+        <!-- Main Content Area -->
+        <main id="main-view" class="flex-1 overflow-y-auto custom-scroll relative p-4 pb-24">
+            <!-- Dynamic Content -->
+        </main>
+
+        <!-- Floating Action Button -->
+        <button onclick="openSpontaneousModal()" class="absolute bottom-24 right-4 w-14 h-14 gradient-yellow rounded-full shadow-lg flex items-center justify-center text-white z-30 hover:shadow-xl transform active:scale-90 transition-all">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+            </svg>
+        </button>
+
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-20 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white px-6 py-3 rounded-xl shadow-lg z-50 hidden toast">
+        <span id="toast-message">Сохранено!</span>
+    </div>
+
+    <!-- Spontaneous Note Modal -->
+    <div id="spontaneous-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-end sm:items-center justify-center backdrop-blur-sm">
+        <div class="bg-white w-full max-w-md rounded-t-3xl sm:rounded-2xl p-6 shadow-2xl transform transition-transform duration-300 translate-y-full sm:translate-y-0 slide-up">
+            <div class="flex justify-between items-center mb-6">
+                <div class="flex items-center gap-2">
+                    <div class="w-10 h-10 gradient-yellow rounded-xl flex items-center justify-center text-white">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                        </svg>
+                    </div>
+                    <h3 class="text-lg font-bold text-gray-900">Спонтанная заметка</h3>
+                </div>
+                <button onclick="closeSpontaneousModal()" class="text-gray-400 hover:text-gray-600 p-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+            
+            <form onsubmit="handleSpontaneousSubmit(event)" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Где вы?</label>
+                    <div class="flex gap-2">
+                        <input type="text" id="spontaneous-location" placeholder="Геолокация или место" class="flex-1 border border-gray-300 rounded-xl p-3.5 text-sm focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 outline-none">
+                        <button type="button" onclick="getSpontaneousLocation()" class="bg-yellow-100 text-yellow-600 p-3.5 rounded-xl hover:bg-yellow-200 transition-colors">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Инсайт *</label>
+                    <textarea id="spontaneous-text" required rows="4" placeholder="2-3 предложения о том, что увидели или почувствовали..." class="w-full border border-gray-300 rounded-xl p-3.5 text-sm focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 outline-none resize-none"></textarea>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Привязать к маршруту (опционально)</label>
+                    <select id="spontaneous-route" class="w-full border border-gray-300 rounded-xl p-3.5 text-sm focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 outline-none bg-white">
+                        <option value="">Не привязывать</option>
+                    </select>
+                </div>
+                <div class="pt-2">
+                    <button type="submit" class="w-full gradient-yellow text-white font-bold py-4 rounded-xl shadow-lg hover:shadow-xl transform active:scale-[0.98] transition-all">
+                        Сохранить заметку
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Export Result Modal -->
+    <div id="export-result-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-end sm:items-center justify-center backdrop-blur-sm">
+        <div class="bg-white w-full max-w-md rounded-t-3xl sm:rounded-2xl p-6 shadow-2xl transform transition-transform duration-300 translate-y-full sm:translate-y-0 slide-up max-h-[90vh] overflow-hidden flex flex-col">
+            <div class="flex justify-between items-center mb-4 flex-shrink-0">
+                <h3 class="text-lg font-bold text-gray-900" id="export-result-title">Результат экспорта</h3>
+                <button onclick="closeExportResult()" class="text-gray-400 hover:text-gray-600 p-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="flex-1 overflow-y-auto custom-scroll mb-4">
+                <div id="export-result-content" class="bg-gray-900 text-green-400 p-4 rounded-xl text-xs font-mono whitespace-pre-wrap"></div>
+            </div>
+            <div class="flex gap-3 flex-shrink-0">
+                <button onclick="copyExportResult()" class="flex-1 gradient-blue text-white font-bold py-3 rounded-xl shadow-lg hover:shadow-xl transform active:scale-[0.98] transition-all">
+                    📋 Копировать
+                </button>
+                <button onclick="downloadExportResult()" class="flex-1 bg-gray-800 text-white font-bold py-3 rounded-xl shadow-lg hover:shadow-xl transform active:scale-[0.98] transition-all">
+                    💾 Скачать
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- State Management ---
+        const STORAGE_KEY = 'kowalski_travel_diary_full_v1';
+        
+        let state = {
+            routes: [],
+            spontaneousNotes: [],
+            customTags: []
+        };
+
+        let currentView = 'export';
+        let lastExportContent = '';
+
+        // --- Storage Functions ---
+        function loadState() {
+            try {
+                const saved = localStorage.getItem(STORAGE_KEY);
+                if (saved) {
+                    state = JSON.parse(saved);
+                }
+                if (!state.customTags) state.customTags = [];
+                if (!state.spontaneousNotes) state.spontaneousNotes = [];
+            } catch (e) {
+                console.error('Error loading state:', e);
+                state = { routes: [], spontaneousNotes: [], customTags: [] };
+            }
+        }
+
+        function saveState() {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+                showToast('Данные сохранены!');
+            } catch (e) {
+                console.error('Error saving state:', e);
+                showToast('Ошибка сохранения!');
+            }
+        }
+
+        function resetAllData() {
+            if (confirm('Вы уверены? Все данные будут удалены!')) {
+                localStorage.removeItem(STORAGE_KEY);
+                state = { routes: [], spontaneousNotes: [], customTags: [] };
+                init();
+                showToast('Данные сброшены');
+            }
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-message').textContent = message;
+            toast.classList.remove('hidden');
+            setTimeout(() => {
+                toast.classList.add('hidden');
+            }, 3000);
+        }
+
+        // --- Stats Update ---
+        function updateStats() {
+            document.getElementById('stat-routes').textContent = state.routes.length;
+            
+            let totalNotes = state.spontaneousNotes.length;
+            let totalExpenses = 0;
+            
+            state.routes.forEach(r => {
+                totalNotes += (r.notes || []).length;
+                totalExpenses += (r.expenses || []).length;
+            });
+            
+            document.getElementById('stat-notes').textContent = totalNotes;
+            document.getElementById('stat-expenses').textContent = totalExpenses;
+        }
+
+        // --- Navigation ---
+        function switchView(view) {
+            currentView = view;
+            
+            document.querySelectorAll('.view-btn').forEach(btn => {
+                const isActive = btn.dataset.view === view;
+                if (isActive) {
+                    btn.classList.remove('text-gray-500', 'hover:bg-gray-50');
+                    btn.classList.add('bg-purple-50', 'text-purple-700');
+                } else {
+                    btn.classList.add('text-gray-500', 'hover:bg-gray-50');
+                    btn.classList.remove('bg-purple-50', 'text-purple-700');
+                }
+            });
+            
+            renderView();
+        }
+
+        function goBack() {
+            // Show route selection
+            const routeId = prompt('Введите ID маршрута или название для перехода:', '');
+            if (routeId) {
+                // In a real app, this would navigate to route detail
+                showToast('Переход к маршруту: ' + routeId);
+            }
+        }
+
+        function renderView() {
+            const main = document.getElementById('main-view');
+            main.innerHTML = '';
+            main.className = "flex-1 overflow-y-auto custom-scroll relative p-4 pb-24 fade-in";
+            
+            if (currentView === 'export') {
+                renderExportView();
+            } else if (currentView === 'spontaneous') {
+                renderSpontaneousView();
+            } else if (currentView === 'routes') {
+                renderRoutesView();
+            }
+        }
+
+        // --- Export View ---
+        function renderExportView() {
+            const main = document.getElementById('main-view');
+            
+            let html = `
+                <h2 class="text-2xl font-bold text-gray-800 mb-2">Экспорт контента</h2>
+                <p class="text-sm text-gray-500 mb-6">Превратите заметки в готовые посты для блога</p>
+                
+                <div class="space-y-4">
+                    <!-- Export Post -->
+                    <div class="export-card bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
+                        <div class="flex items-center gap-3 mb-4">
+                            <div class="w-12 h-12 gradient-blue rounded-xl flex items-center justify-center text-white">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-lg">📝 Собрать пост</h3>
+                                <p class="text-xs text-gray-500">Заметки склеиваются в один текст по хронологии</p>
+                            </div>
+                        </div>
+                        
+                        <div class="space-y-3">
+                            <div>
+                                <label class="block text-xs font-medium text-gray-500 mb-1">Выберите маршрут</label>
+                                <select id="export-post-route" class="w-full border border-gray-300 rounded-xl p-3 text-sm bg-white">
+                                    <option value="">Выберите маршрут...</option>
+                                    ${state.routes.map(r => `<option value="${r.id}">${r.title}</option>`).join('')}
+                                </select>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-xs font-medium text-gray-500 mb-2">Фильтр по тегам</label>
+                                <div class="flex flex-wrap gap-2">
+                                    <button onclick="selectExportTag('all', this)" class="export-tag-btn px-3 py-1.5 bg-purple-100 text-purple-700 text-xs font-medium rounded-full">Все</button>
+                                    <button onclick="selectExportTag('#пост', this)" class="export-tag-btn px-3 py-1.5 bg-gray-100 text-gray-700 text-xs font-medium rounded-full">#пост</button>
+                                    <button onclick="selectExportTag('#гайд', this)" class="export-tag-btn px-3 py-1.5 bg-gray-100 text-gray-700 text-xs font-medium rounded-full">#гайд</button>
+                                    <button onclick="selectExportTag('#идея', this)" class="export-tag-btn px-3 py-1.5 bg-gray-100 text-gray-700 text-xs font-medium rounded-full">#идея</button>
+                                </div>
+                            </div>
+                            
+                            <button onclick="exportPost()" class="w-full gradient-blue text-white font-bold py-3 rounded-xl shadow-md hover:shadow-lg transition-all">
+                                Экспортировать пост
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Trip Summary -->
+                    <div class="export-card bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
+                        <div class="flex items-center gap-3 mb-4">
+                            <div class="w-12 h-12 gradient-green rounded-xl flex items-center justify-center text-white">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-lg">💰 Итоги поездки</h3>
+                                <p class="text-xs text-gray-500">Авто-отчет: даты, маршрут, статистика расходов</p>
+                            </div>
+                        </div>
+                        
+                        <div class="space-y-3">
+                            <div>
+                                <label class="block text-xs font-medium text-gray-500 mb-1">Выберите маршрут</label>
+                                <select id="export-summary-route" class="w-full border border-gray-300 rounded-xl p-3 text-sm bg-white">
+                                    <option value="">Выберите маршрут...</option>
+                                    ${state.routes.map(r => `<option value="${r.id}">${r.title}</option>`).join('')}
+                                </select>
+                            </div>
+                            
+                            <button onclick="exportSummary()" class="w-full gradient-green text-white font-bold py-3 rounded-xl shadow-md hover:shadow-lg transition-all">
+                                Сформировать отчет
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Guide Export -->
+                    <div class="export-card bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
+                        <div class="flex items-center gap-3 mb-4">
+                            <div class="w-12 h-12 gradient-orange rounded-xl flex items-center justify-center text-white">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-lg">📖 Гайд для читателя</h3>
+                                <p class="text-xs text-gray-500">Только полезная информация: #гайд + цены</p>
+                            </div>
+                        </div>
+                        
+                        <div class="space-y-3">
+                            <div>
+                                <label class="block text-xs font-medium text-gray-500 mb-1">Выберите маршрут</label>
+                                <select id="export-guide-route" class="w-full border border-gray-300 rounded-xl p-3 text-sm bg-white">
+                                    <option value="">Выберите маршрут...</option>
+                                    ${state.routes.map(r => `<option value="${r.id}">${r.title}</option>`).join('')}
+                                </select>
+                            </div>
+                            
+                            <button onclick="exportGuide()" class="w-full gradient-orange text-white font-bold py-3 rounded-xl shadow-md hover:shadow-lg transition-all">
+                                Экспортировать гайд
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            main.innerHTML = html;
+        }
+
+        let selectedExportTag = 'all';
+
+        function selectExportTag(tag, btn) {
+            selectedExportTag = tag;
+            document.querySelectorAll('.export-tag-btn').forEach(b => {
+                b.classList.remove('bg-purple-100', 'text-purple-700');
+                b.classList.add('bg-gray-100', 'text-gray-700');
+            });
+            btn.classList.remove('bg-gray-100', 'text-gray-700');
+            btn.classList.add('bg-purple-100', 'text-purple-700');
+        }
+
+        function exportPost() {
+            const routeId = document.getElementById('export-post-route').value;
+            if (!routeId) {
+                alert('Выберите маршрут');
+                return;
+            }
+            
+            const route = state.routes.find(r => r.id === routeId);
+            if (!route) return;
+            
+            let content = `# ${route.title}\n\n`;
+            content += `📅 ${route.date}\n\n`;
+            content += `---\n\n`;
+            
+            let items = [];
+            if (route.notes) {
+                route.notes.forEach(n => items.push({ ...n, kind: 'note' }));
+            }
+            
+            // Filter by tag if not 'all'
+            if (selectedExportTag !== 'all') {
+                items = items.filter(i => i.tags && i.tags.includes(selectedExportTag));
+            }
+            
+            // Sort by timestamp
+            items.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+            
+            items.forEach(item => {
+                const dateStr = new Date(item.timestamp).toLocaleDateString('ru-RU');
+                const timeStr = new Date(item.timestamp).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+                content += `**${dateStr}, ${timeStr}**\n`;
+                if (item.location) {
+                    content += `📍 ${item.location}\n`;
+                }
+                content += `\n${item.text}\n\n`;
+                if (item.tags && item.tags.length > 0) {
+                    content += `Теги: ${item.tags.join(' ')}\n\n`;
+                }
+                content += `---\n\n`;
+            });
+            
+            showExportResult('Пост: ' + route.title, content);
+        }
+
+        function exportSummary() {
+            const routeId = document.getElementById('export-summary-route').value;
+            if (!routeId) {
+                alert('Выберите маршрут');
+                return;
+            }
+            
+            const route = state.routes.find(r => r.id === routeId);
+            if (!route) return;
+            
+            let content = `# 📊 Итоги поездки: ${route.title}\n\n`;
+            content += `📅 Период: ${route.date}\n\n`;
+            content += `---\n\n`;
+            
+            // Statistics
+            const notesCount = (route.notes || []).length;
+            const expensesCount = (route.expenses || []).length;
+            const waypointsCount = (route.waypoints || []).length;
+            const visitedCount = (route.waypoints || []).filter(w => w.visited).length;
+            
+            content += `## 📈 Статистика\n\n`;
+            content += `- 📝 Заметок: ${notesCount}\n`;
+            content += `- 💰 Расходов: ${expensesCount}\n`;
+            content += `- 📍 Точек маршрута: ${waypointsCount}\n`;
+            content += `- ✅ Посещено: ${visitedCount}/${waypointsCount}\n\n`;
+            
+            // Expenses by category
+            if (route.expenses && route.expenses.length > 0) {
+                content += `## 💰 Расходы по категориям\n\n`;
+                
+                let total = 0;
+                let byCategory = {};
+                
+                route.expenses.forEach(exp => {
+                    const amount = parseFloat(exp.amount) || 0;
+                    total += amount;
+                    const catName = getCategoryName(exp.category);
+                    byCategory[catName] = (byCategory[catName] || 0) + amount;
+                });
+                
+                content += `| Категория | Сумма |\n`;
+                content += `|-----------|-------|\n`;
+                content += `| **Итого** | **${total.toLocaleString('ru-RU')} ₽** |\n`;
+                
+                for (const [cat, sum] of Object.entries(byCategory)) {
+                    content += `| ${cat} | ${sum.toLocaleString('ru-RU')} ₽ |\n`;
+                }
+                
+                content += `\n`;
+            }
+            
+            // Route segments
+            if (route.routeSegments && route.routeSegments.length > 0) {
+                content += `## 🚗 Отрезки пути\n\n`;
+                route.routeSegments.forEach(seg => {
+                    const duration = formatDuration(seg.duration);
+                    content += `- ${seg.from} → ${seg.to}: ${duration}\n`;
+                });
+                content += `\n`;
+            }
+            
+            showExportResult('Итоги: ' + route.title, content);
+        }
+
+        function exportGuide() {
+            const routeId = document.getElementById('export-guide-route').value;
+            if (!routeId) {
+                alert('Выберите маршрут');
+                return;
+            }
+            
+            const route = state.routes.find(r => r.id === routeId);
+            if (!route) return;
+            
+            let content = `# 📖 Гайд: ${route.title}\n\n`;
+            content += `Полезная информация для путешественников\n\n`;
+            content += `---\n\n`;
+            
+            // Guide notes
+            content += `## 📝 Рекомендации\n\n`;
+            const guideNotes = (route.notes || []).filter(n => n.tags && n.tags.includes('#гайд'));
+            
+            if (guideNotes.length === 0) {
+                content += `_Нет заметок с тегом #гайд_\n\n`;
+            } else {
+                guideNotes.forEach(note => {
+                    content += `### ${note.location || 'Общее'}\n\n`;
+                    content += `${note.text}\n\n`;
+                });
+            }
+            
+            // Prices for food and accommodation
+            content += `## 💵 Цены\n\n`;
+            
+            const foodExpenses = (route.expenses || []).filter(e => e.category === 'food');
+            const accommodationExpenses = (route.expenses || []).filter(e => e.category === 'accommodation');
+            
+            if (foodExpenses.length > 0) {
+                content += `### 🍽️ Еда\n\n`;
+                foodExpenses.forEach(exp => {
+                    content += `- ${exp.place || 'Заведение'}: ${exp.amount} ₽`;
+                    if (exp.dish) content += ` (${exp.dish})`;
+                    if (exp.rating) content += ` ⭐ ${exp.rating}/5`;
+                    content += `\n`;
+                });
+                content += `\n`;
+            }
+            
+            if (accommodationExpenses.length > 0) {
+                content += `### 🏨 Жилье\n\n`;
+                accommodationExpenses.forEach(exp => {
+                    content += `- ${exp.name || 'Жилье'}: ${exp.amount} ₽`;
+                    if (exp.nights) content += ` / ${exp.nights} ноч.`;
+                    if (exp.comfort) content += ` (${exp.comfort})`;
+                    content += `\n`;
+                });
+                content += `\n`;
+            }
+            
+            // Waypoints
+            if (route.waypoints && route.waypoints.length > 0) {
+                content += `## 📍 Must-visit места\n\n`;
+                route.waypoints.forEach((wp, idx) => {
+                    content += `${idx + 1}. **${wp.name}**`;
+                    if (wp.comment) content += ` — ${wp.comment}`;
+                    content += `\n`;
+                });
+            }
+            
+            showExportResult('Гайд: ' + route.title, content);
+        }
+
+        function getCategoryName(cat) {
+            const map = { 
+                food: '🍽️ Еда', 
+                transport: '⛽ Транспорт', 
+                accommodation: '🏨 Жилье', 
+                souvenirs: '🎁 Сувениры', 
+                entertainment: '🎟️ Развлечения', 
+                other: '📦 Прочее' 
+            };
+            return map[cat] || cat;
+        }
+
+        function formatDuration(ms) {
+            const seconds = Math.floor(ms / 1000);
+            const minutes = Math.floor(seconds / 60);
+            const hours = Math.floor(minutes / 60);
+            
+            if (hours > 0) {
+                return `${hours}ч ${minutes % 60}мин`;
+            } else if (minutes > 0) {
+                return `${minutes}мин ${seconds % 60}сек`;
+            } else {
+                return `${seconds}сек`;
+            }
+        }
+
+        function showExportResult(title, content) {
+            lastExportContent = content;
+            document.getElementById('export-result-title').textContent = title;
+            document.getElementById('export-result-content').textContent = content;
+            
+            document.getElementById('export-result-modal').classList.remove('hidden');
+            setTimeout(() => {
+                document.querySelector('#export-result-modal > div').classList.remove('translate-y-full');
+            }, 10);
+        }
+
+        function closeExportResult() {
+            document.querySelector('#export-result-modal > div').classList.add('translate-y-full');
+            setTimeout(() => {
+                document.getElementById('export-result-modal').classList.add('hidden');
+            }, 300);
+        }
+
+        function copyExportResult() {
+            navigator.clipboard.writeText(lastExportContent).then(() => {
+                showToast('Скопировано в буфер!');
+            });
+        }
+
+        function downloadExportResult() {
+            const blob = new Blob([lastExportContent], { type: 'text/markdown' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'export-' + Date.now() + '.md';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showToast('Файл скачан!');
+        }
+
+        // --- Spontaneous View ---
+        function renderSpontaneousView() {
+            const main = document.getElementById('main-view');
+            
+            let html = `
+                <div class="flex justify-between items-center mb-6">
+                    <div>
+                        <h2 class="text-2xl font-bold text-gray-800">Спонтанные заметки</h2>
+                        <p class="text-sm text-gray-500">Идеи и инсайты вне маршрутов</p>
+                    </div>
+                    <button onclick="openSpontaneousModal()" class="gradient-yellow text-white px-4 py-2.5 rounded-xl text-sm font-medium shadow-md">
+                        + Заметка
+                    </button>
+                </div>
+            `;
+
+            if (state.spontaneousNotes.length === 0) {
+                html += `
+                    <div class="text-center py-16 fade-in">
+                        <div class="w-20 h-20 bg-yellow-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <svg class="w-10 h-10 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                            </svg>
+                        </div>
+                        <h3 class="font-medium text-gray-700 mb-1">Нет спонтанных заметок</h3>
+                        <p class="text-sm text-gray-500 mb-4">Увидели что-то интересное? Запишите!</p>
+                        <button onclick="openSpontaneousModal()" class="gradient-yellow text-white px-6 py-2.5 rounded-xl text-sm font-medium shadow-md">
+                            + Добавить заметку
+                        </button>
+                    </div>
+                `;
+            } else {
+                // Group by date
+                const grouped = {};
+                state.spontaneousNotes.forEach(note => {
+                    const date = new Date(note.timestamp).toLocaleDateString('ru-RU');
+                    if (!grouped[date]) grouped[date] = [];
+                    grouped[date].push(note);
+                });
+                
+                // Sort dates
+                const sortedDates = Object.keys(grouped).sort((a, b) => 
+                    new Date(b.split('.').reverse().join('-')) - new Date(a.split('.').reverse().join('-'))
+                );
+                
+                html += `<div class="space-y-6 fade-in">`;
+                
+                sortedDates.forEach(date => {
+                    html += `
+                        <div>
+                            <h3 class="text-sm font-bold text-gray-500 uppercase tracking-wider mb-3">${date}</h3>
+                            <div class="space-y-3">
+                    `;
+                    
+                    grouped[date].forEach(note => {
+                        const routeInfo = note.routeId ? 
+                            `<span class="bg-purple-100 text-purple-700 text-[10px] px-2 py-0.5 rounded-full">📎 Привязано</span>` : '';
+                        
+                        html += `
+                            <div class="bg-white p-4 rounded-2xl shadow-sm border-l-4 border-yellow-400">
+                                <div class="flex justify-between items-start mb-2">
+                                    <div class="flex items-center gap-2 text-xs text-gray-500">
+                                        <span>📍 ${note.location || 'Неизвестно'}</span>
+                                        <span>•</span>
+                                        <span>${new Date(note.timestamp).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}</span>
+                                    </div>
+                                    ${routeInfo}
+                                </div>
+                                <p class="text-gray-800 text-sm whitespace-pre-line">${note.text}</p>
+                                <div class="flex gap-3 mt-3 pt-3 border-t border-gray-100">
+                                    ${!note.routeId ? `
+                                    <button onclick="linkToRoute('${note.id}')" class="text-xs text-purple-600 font-medium hover:text-purple-700">
+                                        📎 Привязать к маршруту
+                                    </button>
+                                    ` : ''}
+                                    <button onclick="deleteSpontaneousNote('${note.id}')" class="text-xs text-red-500 font-medium hover:text-red-600">Удалить</button>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    
+                    html += `
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                html += `</div>`;
+            }
+            
+            main.innerHTML = html;
+        }
+
+        function openSpontaneousModal() {
+            // Populate route select
+            const select = document.getElementById('spontaneous-route');
+            select.innerHTML = '<option value="">Не привязывать</option>' + 
+                state.routes.map(r => `<option value="${r.id}">${r.title}</option>`).join('');
+            
+            document.getElementById('spontaneous-modal').classList.remove('hidden');
+            setTimeout(() => {
+                document.querySelector('#spontaneous-modal > div').classList.remove('translate-y-full');
+            }, 10);
+        }
+
+        function closeSpontaneousModal() {
+            document.querySelector('#spontaneous-modal > div').classList.add('translate-y-full');
+            setTimeout(() => {
+                document.getElementById('spontaneous-modal').classList.add('hidden');
+            }, 300);
+            document.getElementById('spontaneous-text').value = '';
+            document.getElementById('spontaneous-location').value = '';
+            document.getElementById('spontaneous-route').value = '';
+        }
+
+        function getSpontaneousLocation() {
+            const locations = [
+                'Случайное кафе',
+                'Заправка на трассе',
+                'Смотровая площадка',
+                'Отель',
+                'Рынок сувениров',
+                'Пляж',
+                'Горный перевал'
+            ];
+            const randomLoc = locations[Math.floor(Math.random() * locations.length)];
+            document.getElementById('spontaneous-location').value = randomLoc;
+            
+            const lat = (51.5 + Math.random() * 5).toFixed(4);
+            const lng = (83 + Math.random() * 5).toFixed(4);
+            showToast(`📍 ${lat}° ${lng}°`);
+        }
+
+        function handleSpontaneousSubmit(e) {
+            e.preventDefault();
+            const text = document.getElementById('spontaneous-text').value;
+            const location = document.getElementById('spontaneous-location').value;
+            const routeId = document.getElementById('spontaneous-route').value;
+
+            const note = {
+                id: Date.now().toString(),
+                text,
+                location: location || 'Неизвестно',
+                timestamp: new Date().toISOString(),
+                tags: ['#спонтан'],
+                routeId: routeId || null
+            };
+
+            state.spontaneousNotes.unshift(note);
+            saveState();
+            closeSpontaneousModal();
+            renderSpontaneousView();
+        }
+
+        function deleteSpontaneousNote(id) {
+            if (!confirm('Удалить заметку?')) return;
+            state.spontaneousNotes = state.spontaneousNotes.filter(n => n.id !== id);
+            saveState();
+            renderSpontaneousView();
+        }
+
+        function linkToRoute(id) {
+            const routeId = prompt('Введите ID или название маршрута для привязки:');
+            if (!routeId) return;
+            
+            const route = state.routes.find(r => r.id === routeId || r.title === routeId);
+            if (route) {
+                const note = state.spontaneousNotes.find(n => n.id === id);
+                if (note) {
+                    note.routeId = route.id;
+                    saveState();
+                    renderSpontaneousView();
+                    showToast('Заметка привязана к маршруту!');
+                }
+            } else {
+                alert('Маршрут не найден');
+            }
+        }
+
+        // --- Routes View ---
+        function renderRoutesView() {
+            const main = document.getElementById('main-view');
+            
+            let html = `
+                <div class="flex justify-between items-center mb-6">
+                    <div>
+                        <h2 class="text-2xl font-bold text-gray-800">Все маршруты</h2>
+                        <p class="text-sm text-gray-500">Планируемые, активные и завершенные</p>
+                    </div>
+                    <button onclick="createNewRoute()" class="gradient-blue text-white px-4 py-2.5 rounded-xl text-sm font-medium shadow-md">
+                        + Маршрут
+                    </button>
+                </div>
+            `;
+
+            if (state.routes.length === 0) {
+                html += `
+                    <div class="text-center py-16 fade-in">
+                        <div class="w-20 h-20 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <svg class="w-10 h-10 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>
+                            </svg>
+                        </div>
+                        <h3 class="font-medium text-gray-700 mb-1">Нет маршрутов</h3>
+                        <p class="text-sm text-gray-500 mb-4">Создайте свой первый маршрут</p>
+                        <button onclick="createNewRoute()" class="gradient-blue text-white px-6 py-2.5 rounded-xl text-sm font-medium shadow-md">
+                            + Создать маршрут
+                        </button>
+                    </div>
+                `;
+            } else {
+                html += `<div class="space-y-3 fade-in">`;
+                
+                state.routes.forEach(route => {
+                    const config = getRouteConfig(route.type);
+                    const notesCount = (route.notes || []).length;
+                    const expensesCount = (route.expenses || []).length;
+                    const totalExpenses = (route.expenses || []).reduce((sum, e) => sum + parseFloat(e.amount || 0), 0);
+                    
+                    html += `
+                        <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
+                            <div class="flex justify-between items-start mb-3">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-12 h-12 ${config.gradient} rounded-xl flex items-center justify-center text-white text-xl shadow-md">
+                                        ${config.icon}
+                                    </div>
+                                    <div>
+                                        <h3 class="font-bold text-gray-900">${route.title}</h3>
+                                        <p class="text-sm text-gray-500">${route.date}</p>
+                                    </div>
+                                </div>
+                                <span class="${config.badge} px-2.5 py-1 rounded-lg text-xs font-bold">
+                                    ${config.label}
+                                </span>
+                            </div>
+                            <div class="flex gap-4 pt-3 border-t border-gray-100 text-xs text-gray-500">
+                                <span>📝 ${notesCount} заметок</span>
+                                <span>💰 ${expensesCount} расходов</span>
+                                <span class="font-medium text-gray-700">${totalExpenses.toLocaleString('ru-RU')} ₽</span>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                html += `</div>`;
+            }
+            
+            main.innerHTML = html;
+        }
+
+        function getRouteConfig(type) {
+            const configs = {
+                planned: {
+                    icon: '📋',
+                    color: 'blue',
+                    gradient: 'gradient-blue',
+                    badge: 'bg-blue-100 text-blue-700',
+                    label: 'План'
+                },
+                active: {
+                    icon: '🚗',
+                    color: 'green',
+                    gradient: 'gradient-green',
+                    badge: 'bg-green-100 text-green-700',
+                    label: 'В пути'
+                },
+                spontaneous: {
+                    icon: '⚡',
+                    color: 'yellow',
+                    gradient: 'gradient-yellow',
+                    badge: 'bg-yellow-100 text-yellow-700',
+                    label: 'Спонтан'
+                }
+            };
+            return configs[type] || configs.planned;
+        }
+
+        function createNewRoute() {
+            const title = prompt('Название поездки:');
+            if (!title) return;
+            const date = prompt('Дата поездки:');
+            if (!date) return;
+            const type = prompt('Тип (planned/active/spontaneous):', 'planned');
+            
+            const newRoute = {
+                id: Date.now().toString(),
+                title,
+                date,
+                type: type || 'planned',
+                waypoints: [],
+                notes: [],
+                expenses: [],
+                routeSegments: [],
+                gpsPoints: []
+            };
+            
+            state.routes.unshift(newRoute);
+            saveState();
+            renderRoutesView();
+        }
+
+        // --- Init ---
+        function init() {
+            loadState();
+            
+            if (state.routes.length === 0) {
+                state.routes.push(
+                    {
+                        id: 'demo-planned',
+                        title: 'Алтай, лето 2024',
+                        date: 'Июль - Август 2024',
+                        type: 'planned',
+                        waypoints: [
+                            { id: '1', name: 'Перевал Кату-Ярык', type: 'sight', comment: 'Ради вида', visited: false },
+                            { id: '2', name: 'Чуйский тракт', type: 'transport', comment: 'Красивая дорога', visited: false }
+                        ],
+                        notes: [],
+                        expenses: [],
+                        routeSegments: [],
+                        gpsPoints: []
+                    },
+                    {
+                        id: 'demo-active',
+                        title: 'Кавказ, осень 2024',
+                        date: 'Сентябрь 2024',
+                        type: 'active',
+                        waypoints: [
+                            { id: '3', name: 'Домбай', type: 'stay', comment: 'Горнолыжный курорт', visited: true }
+                        ],
+                        notes: [
+                            { id: 'n1', text: 'Домбай встретил солнцем!', location: 'Домбай', timestamp: new Date().toISOString(), tags: ['#пост', '#гайд'] }
+                        ],
+                        expenses: [
+                            { id: 'e1', category: 'accommodation', amount: '3500', timestamp: new Date().toISOString(), name: 'Отель Домбай', nights: '2' }
+                        ],
+                        routeSegments: [],
+                        gpsPoints: []
+                    }
+                );
+                
+                state.spontaneousNotes.push(
+                    { id: 's1', text: 'Нужно обязательно попробовать местные хычины!', location: 'Придорожное кафе', timestamp: new Date(Date.now() - 3600000).toISOString(), tags: ['#спонтан'], routeId: null },
+                    { id: 's2', text: 'Идея для поста: сравнение цен на бензин в разных регионах', location: 'Заправка', timestamp: new Date(Date.now() - 7200000).toISOString(), tags: ['#спонтан', '#идея'], routeId: null }
+                );
+                
+                saveState();
+            }
+            
+            updateStats();
+            renderView();
+        }
+
+        init();
+    </script>
+</body>
+</html>
+
