@@ -853,7 +853,20 @@
                 saveState();
             }
             
-            currentRouteId = state.routes[0].id;
+            // Проверяем, есть ли переданный ID маршрута из index.html
+            const savedRouteId = sessionStorage.getItem('currentRouteId');
+            if (savedRouteId) {
+                const routeExists = state.routes.find(r => r.id === savedRouteId);
+                if (routeExists && routeExists.type === 'planned') {
+                    currentRouteId = savedRouteId;
+                } else {
+                    currentRouteId = state.routes[0].id;
+                }
+                // Очищаем sessionStorage после использования
+                sessionStorage.removeItem('currentRouteId');
+            } else {
+                currentRouteId = state.routes[0].id;
+            }
             loadRouteData();
         }
 

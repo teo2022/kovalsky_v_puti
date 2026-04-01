@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Экспорт и Спонтанные заметки - Дневник путешественника от Ковальского</title>
+    <title>Главная - Дневник путешественника от Ковальского</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
@@ -55,11 +55,6 @@
         <!-- Header -->
         <header class="gradient-purple text-white p-6 pb-8 rounded-b-3xl shadow-lg z-10">
             <div class="flex items-center gap-3 mb-4">
-                <button onclick="goBack()" class="bg-white/20 hover:bg-white/30 backdrop-blur-sm p-2.5 rounded-xl transition-all">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-                    </svg>
-                </button>
                 <div class="flex-1">
                     <p class="text-purple-200 text-xs font-medium uppercase tracking-wider mb-1">Дневник путешественника</p>
                     <h1 class="text-xl font-bold">от Ковальского</h1>
@@ -283,12 +278,8 @@
         }
 
         function goBack() {
-            // Show route selection
-            const routeId = prompt('Введите ID маршрута или название для перехода:', '');
-            if (routeId) {
-                // In a real app, this would navigate to route detail
-                showToast('Переход к маршруту: ' + routeId);
-            }
+            // На главной странице (index.html) кнопка назад не нужна
+            showToast('Вы на главной странице');
         }
 
         function renderView() {
@@ -887,7 +878,7 @@
                     const totalExpenses = (route.expenses || []).reduce((sum, e) => sum + parseFloat(e.amount || 0), 0);
                     
                     html += `
-                        <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
+                        <div onclick="openRouteDetail('${route.id}')" class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 cursor-pointer hover:shadow-md transition-all active:scale-[0.98]">
                             <div class="flex justify-between items-start mb-3">
                                 <div class="flex items-center gap-3">
                                     <div class="w-12 h-12 ${config.gradient} rounded-xl flex items-center justify-center text-white text-xl shadow-md">
@@ -966,6 +957,28 @@
             state.routes.unshift(newRoute);
             saveState();
             renderRoutesView();
+        }
+
+        function openRouteDetail(routeId) {
+            const route = state.routes.find(r => r.id === routeId);
+            if (!route) {
+                showToast('Маршрут не найден');
+                return;
+            }
+            
+            // Определяем страницу для перехода в зависимости от типа маршрута
+            let targetPage = 'wait.html'; // по умолчанию для planned
+            if (route.type === 'active') {
+                targetPage = 'drive.html';
+            } else if (route.type === 'spontaneous') {
+                targetPage = 'moment.html';
+            }
+            
+            // Сохраняем ID текущего маршрута в sessionStorage для использования на целевой странице
+            sessionStorage.setItem('currentRouteId', routeId);
+            
+            // Переход на соответствующую страницу
+            window.location.href = targetPage;
         }
 
         // --- Init ---
