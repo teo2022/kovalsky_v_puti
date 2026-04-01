@@ -56,6 +56,7 @@
         .ritual-card:hover { transform: scale(1.02); }
         .ritual-card.selected { ring: 4px; ring-color: #3b82f6; background-color: #eff6ff; }
     </style>
+    <script src="navigation.js"></script>
 </head>
 <body class="h-screen flex flex-col overflow-hidden">
 
@@ -136,6 +137,19 @@
                 <span class="text-[10px] font-medium">Экспорт</span>
             </button>
         </nav>
+
+        <!-- Quick Navigation Bar -->
+        <div class="absolute top-4 right-4 z-30 flex gap-2">
+            <a href="index.html" class="bg-white/90 backdrop-blur-sm hover:bg-white text-purple-600 px-3 py-1.5 rounded-lg text-xs font-medium shadow-md transition-all" title="Экспорт и спонтанные заметки">
+                📤 Экспорт
+            </a>
+            <a href="drive.html" class="bg-white/90 backdrop-blur-sm hover:bg-white text-green-600 px-3 py-1.5 rounded-lg text-xs font-medium shadow-md transition-all" title="Активный маршрут">
+                🚗 В пути
+            </a>
+            <a href="wait.html" class="bg-white/90 backdrop-blur-sm hover:bg-white text-blue-600 px-3 py-1.5 rounded-lg text-xs font-medium shadow-md transition-all" title="Планируемый маршрут">
+                📅 План
+            </a>
+        </div>
 
     </div>
 
