@@ -315,7 +315,8 @@ function createStore() {
             notify();
         },
         saveMoment(payload) {
-            const route = getSelectedRoute();
+            const route = payload.routeId ? getRouteById(payload.routeId) : getSelectedRoute();
+            if (!route) return;
             const editingMoment = payload.itemId ? route.moments.find(item => item.id === payload.itemId) : null;
 
             if (editingMoment) {

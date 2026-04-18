@@ -16,12 +16,12 @@ const screenMeta = {
     route: {
         eyebrow: 'Ковальский в пути',
         title: 'Рабочее пространство маршрута',
-        subtitle: 'Таймлайн поездки, захват моментов, расходы и экспорт без переключения между экранами.'
+        subtitle: 'Таймлайн поездки, захват записей, расходы и экспорт без переключения между экранами.'
     },
     library: {
         eyebrow: 'Ковальский в пути',
         title: 'Материалы и быстрый экспорт',
-        subtitle: 'Собранные моменты, заготовки и шаблон публикации для следующего поста.'
+        subtitle: 'Собранные записи, заготовки и шаблон публикации для следующего поста.'
     },
     settings: {
         eyebrow: 'Ковальский в пути',
@@ -78,7 +78,7 @@ function getDeleteModalContent(meta) {
         'clear-demo': {
             title: 'Удалить ознакомительные данные',
             badge: 'Система',
-            message: 'Ознакомительные маршруты, моменты, расходы, шаги плана и чеклисты будут удалены. Категории расходов и их поля сохранятся.',
+            message: 'Ознакомительные маршруты, записи, расходы, шаги плана и чеклисты будут удалены. Категории расходов и их поля сохранятся.',
             confirmLabel: 'Удалить данные'
         },
         'remove-expense-field': {
@@ -96,14 +96,14 @@ function getDeleteModalContent(meta) {
         'delete-route': {
             title: 'Удалить маршрут',
             badge: 'Маршруты',
-            message: `Маршрут «${meta.title || 'Без названия'}» будет удалён со всеми моментами, расходами, планом и чеклистами.`,
+            message: `Маршрут «${meta.title || 'Без названия'}» будет удалён со всеми записями, расходами, планом и чеклистами.`,
             confirmLabel: 'Удалить маршрут'
         },
         'delete-moment': {
-            title: 'Удалить момент',
+            title: 'Удалить запись',
             badge: 'Маршрут',
-            message: `Момент «${meta.title || 'Без названия'}» будет удалён из маршрута.`,
-            confirmLabel: 'Удалить момент'
+            message: `Запись «${meta.title || 'Без названия'}» будет удалена из маршрута.`,
+            confirmLabel: 'Удалить запись'
         },
         'delete-expense': {
             title: 'Удалить расход',
@@ -246,17 +246,16 @@ function buildHeader(state) {
                 <h1 class="page-title">${meta.title}</h1>
                 <p class="page-subtitle">${state.ui.screen === 'route' && selectedRoute ? selectedRoute.title : meta.subtitle}</p>
             </div>
-            <button class="header-action" data-action="header-action">${state.ui.screen === 'route' ? '←' : '+'}</button>
+            ${state.ui.screen === 'library' ? '<button class="header-action" data-action="header-action">+</button>' : ''}
         </div>
     `;
 
-    headerEl.querySelector('[data-action="header-action"]').addEventListener('click', () => {
-        if (state.ui.screen === 'route') {
-            store.navigate('dashboard');
-        } else {
+    const headerAction = headerEl.querySelector('[data-action="header-action"]');
+    if (headerAction) {
+        headerAction.addEventListener('click', () => {
             store.openCapture('route');
-        }
-    });
+        });
+    }
 }
 
 function renderDashboard(state) {
@@ -266,7 +265,6 @@ function renderDashboard(state) {
                 <article class="hero-card">
                     <span class="hero-kicker">Ковальский в пути / маршрутная система</span>
                     <h2 class="hero-title">Начни с первого маршрута.</h2>
-                    <p class="page-subtitle" style="color: rgba(248, 241, 231, 0.8);">Ознакомительные данные очищены. Теперь приложение готово для работы уже с твоими собственными маршрутами и заметками.</p>
                 </article>
             </section>
             ${renderNoRoutesState()}
@@ -275,12 +273,12 @@ function renderDashboard(state) {
 
     const metrics = [
         { label: 'Маршрутов', value: state.routes.length },
-        { label: 'Моментов', value: countAllMoments(state.routes) },
+        { label: 'Записей', value: countAllMoments(state.routes) },
         { label: 'Бюджет', value: formatCurrency(countAllExpenses(state.routes)) }
     ];
 
     const recentMoments = state.routes
-        .flatMap(route => route.moments.map(moment => ({ ...moment, routeTitle: route.title })))
+        .flatMap(route => route.moments.map(moment => ({ ...moment, routeId: route.id, routeTitle: route.title })))
         .slice(0, 4);
 
     return `
@@ -288,7 +286,6 @@ function renderDashboard(state) {
             <article class="hero-card">
                 <span class="hero-kicker">Ковальский в пути / маршрутная система</span>
                 <h2 class="hero-title">Маршрут как редакционный штаб в дороге.</h2>
-                <p class="page-subtitle" style="color: rgba(248, 241, 231, 0.8);">Внутри одного маршрута живут идеи, расходы, точки, черновики и экспорт. Не дневник, а рабочая машина для тревел-контента.</p>
                 <div class="hero-grid">
                     ${metrics.map(metric => `
                         <div class="metric-card" style="background: rgba(255,255,255,0.12); border-color: rgba(255,255,255,0.08);">
@@ -307,18 +304,18 @@ function renderDashboard(state) {
             <div class="quick-grid">
                 <button class="action-card primary" data-capture="route">
                     <p class="action-card-title">Новый маршрут</p>
-                    <p class="action-card-copy">Создать следующую поездку и сразу задать ей режим: план, в пути или спонтанно.</p>
+                    <p class="action-card-copy">Создать поездку</p>
                 </button>
                 <button class="action-card secondary" data-capture="moment">
-                    <p class="action-card-title">Поймать момент</p>
-                    <p class="action-card-copy">Сохранить инсайт, локацию или кусок будущего поста.</p>
+                    <p class="action-card-title">Новая запись</p>
+                    <p class="action-card-copy">Добавить запись</p>
                 </button>
             </div>
         </section>
         <section class="screen-section">
             <div class="section-header">
                 <h3 class="section-title">Маршруты</h3>
-                <span class="section-link">3 режима: план / в пути / спонтанно</span>
+                <span class="muted-copy">План / В пути / Спонтанно</span>
             </div>
             <div class="routes-stack">
                 ${state.routes.map(route => `
@@ -332,7 +329,7 @@ function renderDashboard(state) {
                             <p class="route-desc">${route.coverMood}</p>
                             <div class="inline-stat-row" style="margin-top: 10px;">
                                 <div class="inline-stat">
-                                    <span class="metric-label">Моменты</span>
+                                    <span class="metric-label">Записи</span>
                                     <strong>${route.moments.length}</strong>
                                 </div>
                                 <div class="inline-stat">
@@ -351,7 +348,7 @@ function renderDashboard(state) {
         </section>
         <section class="screen-section">
             <div class="section-header">
-                <h3 class="section-title">Последние материалы</h3>
+                <h3 class="section-title">Последние записи</h3>
             </div>
             <article class="list-card">
                 ${recentMoments.map(moment => `
@@ -361,6 +358,10 @@ function renderDashboard(state) {
                             <p class="list-title">${moment.title}</p>
                             <div class="list-meta">${moment.routeTitle} · ${moment.location} · ${moment.createdAt}</div>
                             <div class="list-note">${moment.content}</div>
+                        </div>
+                        <div class="item-actions">
+                            <button class="mini-action" data-action="edit-moment" data-route-id="${moment.routeId}" data-item-id="${moment.id}">Ред.</button>
+                            <button class="mini-action danger-link" data-action="delete-moment" data-route-id="${moment.routeId}" data-item-id="${moment.id}" data-title="${moment.title}">Удалить</button>
                         </div>
                     </div>
                 `).join('')}
@@ -381,15 +382,15 @@ function renderRoute(state) {
             <article class="hero-card">
                 <span class="hero-kicker">Ковальский в пути / ${getStatusLabel(route.status)}</span>
                 <h2 class="hero-title">${route.title}</h2>
-                <p class="page-subtitle" style="color: rgba(248, 241, 231, 0.8);">${route.region} · ${route.dateRange} · ${route.coverMood}</p>
+                <p class="page-subtitle hero-meta">${route.region} · ${route.dateRange}</p>
                 <div class="hero-grid">
                     <div class="metric-card" style="background: rgba(255,255,255,0.12); border-color: rgba(255,255,255,0.08);">
-                        <div class="metric-label" style="color: rgba(248,241,231,0.72);">Моментов</div>
+                        <div class="metric-label" style="color: rgba(248,241,231,0.72);">Записей</div>
                         <div class="metric-value">${route.moments.length}</div>
                     </div>
                     <div class="metric-card" style="background: rgba(255,255,255,0.12); border-color: rgba(255,255,255,0.08);">
-                        <div class="metric-label" style="color: rgba(248,241,231,0.72);">Точек</div>
-                        <div class="metric-value">${route.waypoints.length}</div>
+                        <div class="metric-label" style="color: rgba(248,241,231,0.72);">Шагов</div>
+                        <div class="metric-value">${route.planSteps.length}</div>
                     </div>
                     <div class="metric-card" style="background: rgba(255,255,255,0.12); border-color: rgba(255,255,255,0.08);">
                         <div class="metric-label" style="color: rgba(248,241,231,0.72);">Бюджет</div>
@@ -418,7 +419,7 @@ function renderRouteTab(route, tab, state) {
                 <div class="sheet-card">
                     <div class="section-header">
                         <h3 class="section-title">История маршрута</h3>
-                        <button class="section-link" data-capture="moment">+ Момент</button>
+                        <button class="section-link" data-capture="moment">+ Запись</button>
                     </div>
                     <div class="timeline-stack">
                         ${route.history.length ? route.history.map(entry => `
@@ -430,7 +431,7 @@ function renderRouteTab(route, tab, state) {
                                     ${entry.note ? `<div class="list-note">${entry.note}</div>` : ''}
                                 </div>
                             </div>
-                        `).join('') : `<p class="muted-copy">История пока пустая. Добавь момент, шаг, расход или работу по чеклисту, и событие появится здесь.</p>`}
+                        `).join('') : `<p class="muted-copy">История пока пустая. Добавь запись, шаг, расход или работу по чеклисту, и событие появится здесь.</p>`}
                     </div>
                 </div>
             </div>
@@ -594,7 +595,7 @@ function renderLibrary(state) {
         </section>
         <section class="screen-section">
             <div class="section-header">
-                <h3 class="section-title">Архив моментов</h3>
+                <h3 class="section-title">Архив записей</h3>
             </div>
             <div class="cards-stack">
                 ${state.routes.flatMap(routeItem => routeItem.moments.map(moment => `
@@ -605,6 +606,10 @@ function renderLibrary(state) {
                         </div>
                         <h4 class="route-title" style="font-size: 16px;">${moment.title}</h4>
                         <p class="route-desc">${moment.content}</p>
+                        <div class="item-actions item-actions-inline">
+                            <button class="mini-action" data-action="edit-moment" data-route-id="${routeItem.id}" data-item-id="${moment.id}">Ред.</button>
+                            <button class="mini-action danger-link" data-action="delete-moment" data-route-id="${routeItem.id}" data-item-id="${moment.id}" data-title="${moment.title}">Удалить</button>
+                        </div>
                     </article>
                 `)).join('')}
             </div>
@@ -620,7 +625,6 @@ function renderSettings(state) {
                     <h3 class="section-title">Схема расходов</h3>
                     <button class="section-link" data-action="new-expense-category">+ Категория</button>
                 </div>
-                <p class="muted-copy" style="margin-bottom: 10px;">Каждая категория задает свой набор полей в модалке расходов. Это перенесено из старой версии и теперь редактируется прямо здесь.</p>
                 <div class="cards-stack">
                     ${state.expenseCategories.map(category => `
                         <div class="route-card">
@@ -656,7 +660,7 @@ function renderSettings(state) {
 
 function renderBottomNav(state) {
     const items = [
-        ['dashboard', '◌', 'Дашборд'],
+        ['dashboard', '⌂', 'Дашборд'],
         ['library', '▣', 'Материалы'],
         ['settings', '☰', 'Система']
     ];
@@ -706,10 +710,12 @@ function renderModal(state) {
         return;
     }
 
-    const route = getSelectedRoute(state);
+    const route = state.ui.captureMeta?.routeId
+        ? state.routes.find(item => item.id === state.ui.captureMeta.routeId)
+        : getSelectedRoute(state);
     if (!route && !canOpenWithoutRoute(type)) {
         store.closeCapture();
-        window.alert('Сначала создай маршрут, чтобы добавлять моменты, шаги плана, расходы и чеклисты.');
+        window.alert('Сначала создай маршрут, чтобы добавлять записи, шаги плана, расходы и чеклисты.');
         return;
     }
     modalRoot.innerHTML = `
@@ -822,9 +828,10 @@ function buildModal(type, route, state) {
             `
         },
         moment: {
-            title: editingMoment ? 'Редактировать момент' : 'Новый момент',
+            title: editingMoment ? 'Редактировать запись' : 'Новая запись',
             badge: routeContext.title,
             fields: `
+                <input type="hidden" name="routeId" value="${routeContext.id || ''}">
                 <input type="hidden" name="itemId" value="${editingMoment?.id || ''}">
                 <div class="field"><label>Заголовок</label><input name="title" required placeholder="Что произошло или зацепило?" value="${editingMoment?.title || ''}"></div>
                 <div class="field"><label>Категория</label><select name="category">
@@ -963,7 +970,7 @@ function buildExport(route, state) {
         ? route.planSteps.map(step => `- ${step.time || '--:--'} · ${step.title} [${getPlanStepStatusLabel(step.status)}]`).join('\n')
         : '- Пока нет шагов плана';
 
-    return `# ${route.title}\n\nСтатус: ${getStatusLabel(route.status)}\nРегион: ${route.region}\nДаты: ${route.dateRange}\n\n## Хуки\n${highlights || '- Пока нет собранных моментов'}\n\n## План\n${planLines}\n\n## Бюджет\n${expenseLines}\n\n## Чеклисты\n${checklistLines}`;
+    return `# ${route.title}\n\nСтатус: ${getStatusLabel(route.status)}\nРегион: ${route.region}\nДаты: ${route.dateRange}\n\n## Записи\n${highlights || '- Пока нет собранных записей'}\n\n## План\n${planLines}\n\n## Бюджет\n${expenseLines}\n\n## Чеклисты\n${checklistLines}`;
 }
 
 function getStatusLabel(status) {
@@ -1092,13 +1099,13 @@ function bindMainEvents(state) {
     });
 
     mainEl.querySelectorAll('[data-action="edit-moment"]').forEach(button => {
-        button.addEventListener('click', () => store.openCapture('moment', { itemId: button.dataset.itemId }));
+        button.addEventListener('click', () => store.openCapture('moment', { routeId: button.dataset.routeId || route?.id, itemId: button.dataset.itemId }));
     });
 
     mainEl.querySelectorAll('[data-action="delete-moment"]').forEach(button => {
         button.addEventListener('click', () => askDeleteConfirmation({
             action: 'delete-moment',
-            routeId: route.id,
+            routeId: button.dataset.routeId || route?.id,
             itemId: button.dataset.itemId,
             title: button.dataset.title
         }));
@@ -1188,7 +1195,7 @@ function maybeShowIntroNotice() {
         return;
     }
 
-    window.alert('В приложении добавлены ознакомительные маршруты, моменты и расходы. Их можно удалить в разделе "Система" кнопкой "Удалить ознакомительные данные". Категории расходов и их поля при этом сохранятся.');
+    window.alert('В приложении добавлены ознакомительные маршруты, записи и расходы. Их можно удалить в разделе "Система" кнопкой "Удалить ознакомительные данные". Категории расходов и их поля при этом сохранятся.');
     localStorage.setItem(INTRO_NOTICE_KEY, '1');
 }
 

@@ -115,12 +115,12 @@ button {
     flex: 1;
     min-height: 0;
     overflow-y: auto;
-    padding: 0 12px 108px;
+    padding: 0 12px 104px;
     -webkit-overflow-scrolling: touch;
 }
 
 .screen-section {
-    margin-bottom: 12px;
+    margin-bottom: 10px;
 }
 
 .glass-card,
@@ -137,7 +137,7 @@ button {
 
 .hero-card {
     border-radius: var(--radius-lg);
-    padding: 16px;
+    padding: 14px;
     color: var(--text-inverse);
     background:
         linear-gradient(135deg, rgba(16, 40, 37, 0.95), rgba(18, 84, 78, 0.9)),
@@ -156,22 +156,27 @@ button {
 }
 
 .hero-title {
-    margin: 10px 0 6px;
+    margin: 8px 0 4px;
     font-family: "Prata", serif;
-    font-size: 23px;
-    line-height: 1.08;
+    font-size: 21px;
+    line-height: 1.06;
 }
 
 .hero-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 8px;
-    margin-top: 14px;
+    gap: 6px;
+    margin-top: 10px;
+}
+
+.hero-meta {
+    margin-top: 2px;
+    color: rgba(248, 241, 231, 0.82);
 }
 
 .metric-card {
     border-radius: 18px;
-    padding: 12px;
+    padding: 10px;
     background: rgba(255,255,255,0.98);
     border: 1px solid rgba(24, 50, 47, 0.08);
     box-shadow: 0 8px 18px rgba(24, 34, 31, 0.08);
@@ -185,7 +190,7 @@ button {
 }
 
 .metric-value {
-    font-size: 20px;
+    font-size: 18px;
     font-weight: 800;
     line-height: 1;
 }
@@ -195,7 +200,7 @@ button {
     align-items: center;
     justify-content: space-between;
     gap: 8px;
-    margin-bottom: 8px;
+    margin-bottom: 6px;
 }
 
 .section-title {
@@ -219,19 +224,19 @@ button {
 .timeline-stack,
 .checklist-stack {
     display: grid;
-    gap: 8px;
+    gap: 6px;
 }
 
 .route-card {
     border-radius: 22px;
-    padding: 14px;
+    padding: 12px;
     background: rgba(255, 255, 255, 0.98);
     border: 1px solid rgba(24, 50, 47, 0.1);
 }
 
 .plan-step-card {
     border-radius: 20px;
-    padding: 14px;
+    padding: 12px;
     background: rgba(255, 255, 255, 0.98);
     border: 1px solid rgba(24, 50, 47, 0.1);
     box-shadow: 0 10px 22px rgba(24, 34, 31, 0.06);
@@ -273,7 +278,7 @@ button {
 .quick-grid,
 .tab-row {
     display: flex;
-    gap: 6px;
+    gap: 5px;
     flex-wrap: wrap;
 }
 
@@ -316,8 +321,8 @@ button {
 }
 
 .route-title {
-    margin: 8px 0 4px;
-    font-size: 17px;
+    margin: 6px 0 3px;
+    font-size: 16px;
     font-weight: 800;
     color: var(--text);
 }
@@ -325,8 +330,8 @@ button {
 .route-desc,
 .muted-copy {
     margin: 0;
-    font-size: 12px;
-    line-height: 1.35;
+    font-size: 11px;
+    line-height: 1.4;
     color: var(--text-muted);
 }
 
@@ -334,13 +339,13 @@ button {
     min-width: calc(50% - 4px);
     background: rgba(247, 249, 248, 0.98);
     border-radius: 15px;
-    padding: 10px;
+    padding: 8px 10px;
     border: 1px solid rgba(24, 50, 47, 0.08);
 }
 
 .inline-stat strong {
     display: block;
-    font-size: 15px;
+    font-size: 14px;
 }
 
 .quick-grid {
@@ -350,8 +355,8 @@ button {
 
 .action-card {
     border-radius: 20px;
-    padding: 13px;
-    min-height: 96px;
+    padding: 12px;
+    min-height: 78px;
     text-align: left;
     position: relative;
     overflow: hidden;
@@ -374,26 +379,26 @@ button {
 }
 
 .action-card-title {
-    margin: 0 0 6px;
-    font-size: 14px;
+    margin: 0 0 2px;
+    font-size: 13px;
     font-weight: 800;
 }
 
 .action-card-copy {
     margin: 0;
-    font-size: 12px;
-    line-height: 1.3;
-    opacity: 0.92;
+    font-size: 11px;
+    line-height: 1.25;
+    opacity: 0.86;
 }
 
 .list-card {
     border-radius: 20px;
-    padding: 12px;
+    padding: 10px 12px;
     background: rgba(255,255,255,0.98);
 }
 
 .list-item {
-    padding: 12px 0;
+    padding: 10px 0;
     display: flex;
     gap: 10px;
     align-items: flex-start;
@@ -422,7 +427,7 @@ button {
 
 .list-title {
     margin: 0 0 4px;
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 800;
     color: var(--text);
 }
@@ -434,8 +439,8 @@ button {
 }
 
 .list-note {
-    margin-top: 5px;
-    font-size: 12px;
+    margin-top: 4px;
+    font-size: 11px;
     line-height: 1.35;
 }
 
@@ -448,7 +453,7 @@ button {
 
 .tab-button {
     white-space: nowrap;
-    padding: 9px 13px;
+    padding: 8px 11px;
     border-radius: 999px;
     background: rgba(255, 255, 255, 0.96);
     color: var(--text-muted);
@@ -467,7 +472,7 @@ button {
 
 .sheet-card {
     border-radius: 22px;
-    padding: 14px;
+    padding: 12px;
     background: rgba(255,255,255,0.98);
 }
 
@@ -478,7 +483,7 @@ button {
     bottom: calc(env(safe-area-inset-bottom, 0px) + 10px);
     border-radius: 20px;
     background: rgba(15, 26, 24, 0.96);
-    padding: 8px;
+    padding: 7px;
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 6px;
@@ -487,7 +492,7 @@ button {
 }
 
 .nav-button {
-    min-height: 48px;
+    min-height: 44px;
     color: rgba(248, 241, 231, 0.82);
     border-radius: 14px;
     display: grid;
@@ -503,11 +508,11 @@ button {
 }
 
 .nav-icon {
-    font-size: 16px;
+    font-size: 15px;
 }
 
 .nav-label {
-    font-size: 10px;
+    font-size: 9px;
     font-weight: 700;
 }
 
@@ -536,7 +541,7 @@ button {
 
 .field-grid {
     display: grid;
-    gap: 10px;
+    gap: 8px;
 }
 
 .field {
@@ -563,14 +568,14 @@ button {
 }
 
 .field textarea {
-    min-height: 88px;
+    min-height: 76px;
     resize: vertical;
 }
 
 .button-row {
     display: flex;
     gap: 8px;
-    margin-top: 12px;
+    margin-top: 10px;
 }
 
 .compact-actions {
@@ -591,14 +596,14 @@ button {
 .item-actions-inline {
     flex-direction: row;
     justify-content: flex-end;
-    margin-top: 10px;
+    margin-top: 8px;
 }
 
 .mini-action {
     font-size: 11px;
     font-weight: 700;
     color: var(--accent-2);
-    padding: 6px 10px;
+    padding: 5px 9px;
     border-radius: 999px;
     background: rgba(22, 124, 116, 0.08);
 }
@@ -608,7 +613,7 @@ button {
     display: flex;
     align-items: center;
     gap: 10px;
-    padding: 10px 12px;
+    padding: 9px 11px;
     border-radius: 16px;
     background: rgba(255, 255, 255, 0.98);
     border: 1px solid rgba(24, 50, 47, 0.1);
@@ -645,7 +650,7 @@ button {
 
 .btn {
     flex: 1;
-    min-height: 44px;
+    min-height: 42px;
     border-radius: 14px;
     font-weight: 800;
     box-shadow: 0 12px 24px rgba(24, 34, 31, 0.08);
@@ -676,7 +681,7 @@ button {
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    padding: 6px 9px;
+    padding: 5px 8px;
     border-radius: 999px;
     background: rgba(24, 50, 47, 0.1);
     color: var(--text);
@@ -705,11 +710,11 @@ button {
     background: #142421;
     color: #d9f5ef;
     border-radius: 18px;
-    padding: 12px;
+    padding: 10px;
     font-family: Consolas, monospace;
     white-space: pre-wrap;
-    font-size: 11px;
-    line-height: 1.45;
+    font-size: 10px;
+    line-height: 1.4;
     border: 1px solid rgba(217, 245, 239, 0.08);
 }
 
