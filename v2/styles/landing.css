@@ -18,6 +18,12 @@ a {
     text-decoration: none;
 }
 
+button {
+    font: inherit;
+    border: 0;
+    cursor: pointer;
+}
+
 .landing-shell {
     width: min(1180px, calc(100% - 32px));
     margin: 0 auto;
@@ -90,6 +96,13 @@ a {
 .secondary-cta {
     background: rgba(24, 50, 47, 0.08);
     color: var(--text);
+}
+
+.nav-cta:disabled,
+.primary-cta:disabled,
+.secondary-cta:disabled {
+    opacity: 0.72;
+    cursor: default;
 }
 
 .hero {

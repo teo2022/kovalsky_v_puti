@@ -1,1 +1,2 @@
-Nothing should be ignored since the changes only include HTML files (source code), and there are no build artifacts, dependencies, or temporary files in the change list.
+dist/
+node_modules/

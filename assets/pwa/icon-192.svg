@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="192" height="192" viewBox="0 0 192 192">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#14332f"/>
+      <stop offset="100%" stop-color="#e76943"/>
+    </linearGradient>
+  </defs>
+  <rect width="192" height="192" rx="44" fill="url(#bg)"/>
+  <circle cx="96" cy="64" r="26" fill="#f8f1e7" opacity="0.18"/>
+  <path d="M49 124c18-8 34-26 48-26 15 0 22 15 46 15 8 0 17-3 24-8-10 23-32 39-61 39-26 0-47-8-57-20z" fill="#f8f1e7"/>
+  <text x="96" y="84" text-anchor="middle" font-family="Manrope, Arial, sans-serif" font-size="30" font-weight="800" fill="#f8f1e7">КВП</text>
+</svg>

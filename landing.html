@@ -4,13 +4,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ковальский в пути — система маршрутов и контента</title>
+    <meta name="theme-color" content="#18322f">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Ковальский в пути">
+    <link rel="manifest" href="./manifest.webmanifest">
+    <link rel="icon" href="./assets/pwa/icon-192.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="./assets/pwa/icon-192.svg">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Prata&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="./v2/styles/theme.css">
     <link rel="stylesheet" href="./v2/styles/landing.css">
 </head>
-<body>
+<body data-app-url="./v2/index.html" data-sw-url="./sw.js">
     <div class="landing-shell">
         <header class="topbar">
             <div class="brand-lockup">
@@ -24,7 +31,7 @@
                 <a href="#product">Продукт</a>
                 <a href="#workflow">Сценарии</a>
                 <a href="#screens">Экраны</a>
-                <a href="./v2/index.html" class="nav-cta">Открыть версию 2</a>
+                <button class="nav-cta" type="button" data-install-app>Установить приложение</button>
             </nav>
         </header>
 
@@ -39,7 +46,8 @@
                         в одном мобильном потоке.
                     </p>
                     <div class="hero-actions">
-                        <a class="primary-cta" href="./v2/index.html">Запустить приложение</a>
+                        <button class="primary-cta" type="button" data-install-app>Установить приложение</button>
+                        <a class="secondary-cta" href="./v2/index.html">Открыть в браузере</a>
                         <a class="secondary-cta" href="#product">Посмотреть структуру</a>
                     </div>
                     <div class="hero-badges">
@@ -185,11 +193,13 @@
                     <p>Лендинг уже отделён от приложения. Дальше можно дорабатывать продуктовую часть, не смешивая маркетинговую страницу и рабочий интерфейс.</p>
                 </div>
                 <div class="hero-actions">
-                    <a class="primary-cta" href="./v2/index.html">Открыть версию 2</a>
+                    <button class="primary-cta" type="button" data-install-app>Установить приложение</button>
+                    <a class="secondary-cta" href="./v2/index.html">Открыть в браузере</a>
                     <a class="secondary-cta" href="#product">Посмотреть лендинг</a>
                 </div>
             </section>
         </main>
     </div>
+    <script src="./web-app.js"></script>
 </body>
 </html>

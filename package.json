@@ -1,0 +1,9 @@
+{
+  "name": "kovalsky-v-puti",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Ковальский в пути — веб-приложение для маршрутов, расходов и истории поездки.",
+  "scripts": {
+    "build": "node ./scripts/build.mjs"
+  }
+}
