@@ -1,4 +1,4 @@
-import { cp, mkdir, rm } from 'node:fs/promises';
+import { cp, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -25,6 +25,9 @@ async function build() {
             cp(path.join(rootDir, entry), path.join(distDir, entry), { recursive: true })
         )
     );
+
+    const landingHtml = await readFile(path.join(rootDir, 'landing.html'), 'utf8');
+    await writeFile(path.join(distDir, 'index.html'), landingHtml, 'utf8');
 
     console.log(`Build completed: ${distDir}`);
 }

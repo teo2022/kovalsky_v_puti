@@ -95,7 +95,7 @@ function normalizeChecklist(checklist = {}) {
     };
 }
 
-function buildLegacyHistory(route) {
+function buildLegacyHistory(route, expenseCategories = []) {
     const history = [];
 
     route.moments.forEach(moment => {
@@ -110,7 +110,7 @@ function buildLegacyHistory(route) {
     });
 
     route.expenses.forEach(expense => {
-        const expenseLabel = getExpenseCategory(expense.category)?.label || expense.title || 'Расход';
+        const expenseLabel = expenseCategories.find(category => category.id === expense.category)?.label || expense.title || 'Расход';
         history.push(normalizeHistoryEntry({
             id: `legacy-expense-${expense.id}`,
             kind: 'expense',
@@ -160,7 +160,7 @@ function ensureStateShape(state) {
             shapedRoute.planSteps = shapedRoute.planSteps.map(normalizePlanStep);
             shapedRoute.history = shapedRoute.history.length
                 ? shapedRoute.history.map(normalizeHistoryEntry)
-                : buildLegacyHistory(shapedRoute);
+                : buildLegacyHistory(shapedRoute, safeState.expenseCategories);
             return shapedRoute;
         })
         : clone(demoState.routes).map(route => {
@@ -169,7 +169,7 @@ function ensureStateShape(state) {
             shapedRoute.planSteps = shapedRoute.planSteps.map(normalizePlanStep);
             shapedRoute.history = shapedRoute.history.length
                 ? shapedRoute.history.map(normalizeHistoryEntry)
-                : buildLegacyHistory(shapedRoute);
+                : buildLegacyHistory(shapedRoute, safeState.expenseCategories);
             return shapedRoute;
         });
 
