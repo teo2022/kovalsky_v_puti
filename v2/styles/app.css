@@ -6,9 +6,9 @@ html, body {
     margin: 0;
     height: 100%;
     background:
-        radial-gradient(circle at top left, rgba(231, 105, 67, 0.18), transparent 24%),
-        radial-gradient(circle at top right, rgba(22, 124, 116, 0.12), transparent 28%),
-        linear-gradient(180deg, #efe5d6 0%, #f7f2ea 100%);
+        radial-gradient(circle at top left, rgba(185, 110, 77, 0.12), transparent 24%),
+        radial-gradient(circle at top right, rgba(68, 108, 99, 0.1), transparent 28%),
+        linear-gradient(180deg, #ece3d7 0%, #f6f1e8 100%);
     color: var(--text);
     font-family: "Manrope", sans-serif;
     overflow: hidden;
@@ -54,8 +54,8 @@ button {
     position: absolute;
     inset: 0;
     background:
-        radial-gradient(circle at 12% 0%, rgba(231, 105, 67, 0.12), transparent 24%),
-        radial-gradient(circle at 88% 8%, rgba(22, 124, 116, 0.1), transparent 28%),
+        radial-gradient(circle at 12% 0%, rgba(185, 110, 77, 0.08), transparent 24%),
+        radial-gradient(circle at 88% 8%, rgba(68, 108, 99, 0.08), transparent 28%),
         linear-gradient(180deg, rgba(255,255,255,0.18), rgba(255,255,255,0));
     pointer-events: none;
 }
@@ -140,8 +140,8 @@ button {
     padding: 14px;
     color: var(--text-inverse);
     background:
-        linear-gradient(135deg, rgba(16, 40, 37, 0.95), rgba(18, 84, 78, 0.9)),
-        radial-gradient(circle at top left, rgba(255, 198, 132, 0.35), transparent 35%);
+        linear-gradient(135deg, rgba(24, 43, 39, 0.97), rgba(59, 92, 84, 0.94)),
+        radial-gradient(circle at top left, rgba(196, 162, 120, 0.24), transparent 35%);
 }
 
 .hero-kicker {
@@ -162,16 +162,87 @@ button {
     line-height: 1.06;
 }
 
-.hero-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 6px;
-    margin-top: 10px;
-}
-
 .hero-meta {
     margin-top: 2px;
     color: rgba(248, 241, 231, 0.82);
+}
+
+.hero-stats {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.hero-stat {
+    border-radius: 18px;
+    padding: 10px;
+    background: rgba(255, 250, 244, 0.94);
+    border: 1px solid rgba(255, 255, 255, 0.24);
+    color: var(--text);
+    box-shadow: 0 10px 18px rgba(14, 24, 22, 0.14);
+}
+
+.hero-stat-value {
+    font-size: 18px;
+    font-weight: 800;
+    line-height: 1.1;
+    color: #132421;
+    word-break: break-word;
+}
+
+.hero-stat-label {
+    margin-top: 4px;
+    font-size: 10px;
+    font-weight: 700;
+    color: #56635f;
+}
+
+.route-hero-shell {
+    display: grid;
+    gap: 8px;
+}
+
+.route-hero-title {
+    font-size: 20px;
+    margin: 0;
+}
+
+.route-hero-meta-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+}
+
+.route-hero-pill {
+    background: rgba(255, 255, 255, 0.18);
+    color: #fffdf8;
+    border-color: rgba(255, 255, 255, 0.18);
+    font-weight: 600;
+    text-shadow: 0 1px 0 rgba(18, 29, 27, 0.16);
+}
+
+.route-hero-meta-row .route-status {
+    color: #fffdf8;
+    border-color: rgba(255, 255, 255, 0.18);
+    text-shadow: 0 1px 0 rgba(18, 29, 27, 0.16);
+}
+
+.route-hero-meta-row .status-planned {
+    background: rgba(120, 138, 172, 0.28);
+}
+
+.route-hero-meta-row .status-active {
+    background: rgba(90, 136, 124, 0.28);
+}
+
+.route-hero-meta-row .status-spontaneous {
+    background: rgba(185, 110, 77, 0.3);
+}
+
+.route-hero-stats .hero-stat {
+    background: rgba(255, 255, 255, 0.96);
 }
 
 .metric-card {
@@ -216,7 +287,8 @@ button {
     font-weight: 700;
     padding: 6px 10px;
     border-radius: 999px;
-    background: rgba(22, 124, 116, 0.1);
+    background: rgba(68, 108, 99, 0.1);
+    white-space: nowrap;
 }
 
 .routes-stack,
@@ -243,13 +315,13 @@ button {
 }
 
 .plan-step-card.status-doing {
-    background: linear-gradient(180deg, rgba(255, 247, 242, 0.98), rgba(255, 255, 255, 0.98));
-    border-color: rgba(231, 105, 67, 0.3);
+    background: linear-gradient(180deg, rgba(252, 245, 241, 0.98), rgba(255, 255, 255, 0.98));
+    border-color: rgba(185, 110, 77, 0.24);
 }
 
 .plan-step-card.status-done {
-    background: linear-gradient(180deg, rgba(241, 251, 249, 0.98), rgba(255, 255, 255, 0.98));
-    border-color: rgba(22, 124, 116, 0.28);
+    background: linear-gradient(180deg, rgba(243, 248, 247, 0.98), rgba(255, 255, 255, 0.98));
+    border-color: rgba(68, 108, 99, 0.24);
 }
 
 .plan-result-box {
@@ -296,21 +368,21 @@ button {
 }
 
 .status-planned {
-    background: rgba(41, 118, 255, 0.14);
-    color: #1f58bc;
-    border-color: rgba(41, 118, 255, 0.22);
+    background: rgba(108, 126, 161, 0.16);
+    color: #4d617f;
+    border-color: rgba(108, 126, 161, 0.22);
 }
 
 .status-active {
-    background: rgba(22, 124, 116, 0.14);
-    color: #0f6961;
-    border-color: rgba(22, 124, 116, 0.22);
+    background: rgba(68, 108, 99, 0.16);
+    color: #355a52;
+    border-color: rgba(68, 108, 99, 0.22);
 }
 
 .status-spontaneous {
-    background: rgba(231, 105, 67, 0.14);
-    color: #bf4c2d;
-    border-color: rgba(231, 105, 67, 0.22);
+    background: rgba(185, 110, 77, 0.16);
+    color: #9a5f43;
+    border-color: rgba(185, 110, 77, 0.22);
 }
 
 .soft-pill,
@@ -356,7 +428,7 @@ button {
 .action-card {
     border-radius: 20px;
     padding: 12px;
-    min-height: 78px;
+    min-height: 88px;
     text-align: left;
     position: relative;
     overflow: hidden;
@@ -366,12 +438,12 @@ button {
 
 .action-card.primary {
     color: var(--text-inverse);
-    background: linear-gradient(135deg, #d85a36, #ef7a46);
+    background: linear-gradient(135deg, #34574f, #4c7b70);
 }
 
 .action-card.secondary {
     color: var(--text-inverse);
-    background: linear-gradient(135deg, #0f5f5a, #169085);
+    background: linear-gradient(135deg, #a6674a, #c07b59);
 }
 
 .action-card.neutral {
@@ -379,7 +451,7 @@ button {
 }
 
 .action-card-title {
-    margin: 0 0 2px;
+    margin: 0 0 4px;
     font-size: 13px;
     font-weight: 800;
 }
@@ -387,8 +459,8 @@ button {
 .action-card-copy {
     margin: 0;
     font-size: 11px;
-    line-height: 1.25;
-    opacity: 0.86;
+    line-height: 1.35;
+    opacity: 0.9;
 }
 
 .list-card {
@@ -416,13 +488,17 @@ button {
     align-items: center;
     justify-content: center;
     background: var(--accent-soft);
-    color: #9f4024;
-    border: 1px solid rgba(231, 105, 67, 0.16);
+    color: #8f543b;
+    border: 1px solid rgba(185, 110, 77, 0.14);
 }
 
 .list-body {
     flex: 1;
     min-width: 0;
+}
+
+.item-actions {
+    flex: 0 0 auto;
 }
 
 .list-title {
@@ -605,7 +681,7 @@ button {
     color: var(--accent-2);
     padding: 5px 9px;
     border-radius: 999px;
-    background: rgba(22, 124, 116, 0.08);
+    background: rgba(68, 108, 99, 0.1);
 }
 
 .checklist-item {
@@ -621,8 +697,8 @@ button {
 }
 
 .checklist-item.is-done {
-    background: rgba(238, 249, 247, 0.98);
-    border-color: rgba(22, 124, 116, 0.22);
+    background: rgba(241, 247, 245, 0.98);
+    border-color: rgba(68, 108, 99, 0.22);
 }
 
 .checkmark {
@@ -657,12 +733,12 @@ button {
 }
 
 .btn-primary {
-    background: linear-gradient(135deg, #d95b37, #ef824a);
+    background: linear-gradient(135deg, #31554d, #4c7b70);
     color: var(--text-inverse);
 }
 
 .danger-button {
-    background: linear-gradient(135deg, #bf4e37, #dc6b4c);
+    background: linear-gradient(135deg, #9a5d45, #b97456);
 }
 
 .btn-secondary {
@@ -702,8 +778,8 @@ button {
 }
 
 .danger-link {
-    color: #c9523a;
-    background: rgba(201, 82, 58, 0.1);
+    color: #9c5d45;
+    background: rgba(185, 110, 77, 0.12);
 }
 
 .markdown-box {
@@ -731,5 +807,145 @@ button {
 
     .app-main {
         padding-bottom: 116px;
+    }
+}
+
+@media (max-width: 390px) {
+    .hero-kicker {
+        padding: 5px 8px;
+        font-size: 9px;
+    }
+
+    .hero-title,
+    .route-hero-title {
+        font-size: 18px;
+    }
+
+    .hero-meta {
+        font-size: 11px;
+    }
+
+    .route-hero-meta-row {
+        gap: 5px;
+    }
+
+    .hero-stats {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 5px;
+    }
+
+    .hero-stat {
+        padding: 9px 8px;
+        border-radius: 16px;
+    }
+
+    .hero-stat-value {
+        font-size: 15px;
+    }
+
+    .hero-stat-label {
+        font-size: 9px;
+    }
+
+    .section-header {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .section-link {
+        width: 100%;
+        justify-content: center;
+        text-align: center;
+    }
+
+    .quick-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .route-topline,
+    .chip-row,
+    .tab-row {
+        gap: 4px;
+    }
+
+    .route-status,
+    .chip,
+    .soft-pill {
+        padding: 4px 8px;
+        font-size: 10px;
+    }
+
+    .inline-stat-row {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .inline-stat-row .inline-stat:last-child:first-child,
+    .inline-stat-row .inline-stat:last-child:nth-child(3) {
+        grid-column: 1 / -1;
+    }
+
+    .inline-stat {
+        min-width: 0;
+    }
+
+    .list-item {
+        gap: 8px;
+    }
+
+    .list-badge {
+        min-width: 30px;
+        height: 30px;
+        border-radius: 10px;
+    }
+
+    .item-actions,
+    .item-actions-inline {
+        width: 100%;
+        flex-direction: row;
+        justify-content: flex-start;
+        margin-left: 0;
+        margin-top: 8px;
+    }
+
+    .mini-action {
+        padding: 5px 8px;
+    }
+
+    .nav-button {
+        min-height: 42px;
+    }
+}
+
+@media (max-width: 350px) {
+    .app-main {
+        padding-left: 10px;
+        padding-right: 10px;
+    }
+
+    .hero-card,
+    .route-card,
+    .sheet-card,
+    .list-card,
+    .plan-step-card {
+        padding: 10px;
+    }
+
+    .hero-stats {
+        grid-template-columns: 1fr;
+    }
+
+    .route-hero-meta-row {
+        display: grid;
+        grid-template-columns: 1fr;
+    }
+
+    .tab-button {
+        padding: 7px 10px;
+        font-size: 11px;
+    }
+
+    .nav-label {
+        font-size: 8px;
     }
 }

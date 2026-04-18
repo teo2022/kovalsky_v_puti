@@ -285,12 +285,11 @@ function renderDashboard(state) {
         <section class="screen-section">
             <article class="hero-card">
                 <span class="hero-kicker">Ковальский в пути / маршрутная система</span>
-                <h2 class="hero-title">Маршрут как редакционный штаб в дороге.</h2>
-                <div class="hero-grid">
+                <div class="hero-stats">
                     ${metrics.map(metric => `
-                        <div class="metric-card" style="background: rgba(255,255,255,0.12); border-color: rgba(255,255,255,0.08);">
-                            <div class="metric-label" style="color: rgba(248,241,231,0.72);">${metric.label}</div>
-                            <div class="metric-value">${metric.value}</div>
+                        <div class="hero-stat">
+                            <div class="hero-stat-value">${metric.value}</div>
+                            <div class="hero-stat-label">${metric.label}</div>
                         </div>
                     `).join('')}
                 </div>
@@ -304,11 +303,11 @@ function renderDashboard(state) {
             <div class="quick-grid">
                 <button class="action-card primary" data-capture="route">
                     <p class="action-card-title">Новый маршрут</p>
-                    <p class="action-card-copy">Создать поездку</p>
+                    <p class="action-card-copy">Создать новую поездку и задать ей режим работы.</p>
                 </button>
                 <button class="action-card secondary" data-capture="moment">
                     <p class="action-card-title">Новая запись</p>
-                    <p class="action-card-copy">Добавить запись</p>
+                    <p class="action-card-copy">Зафиксировать идею, наблюдение или заметку по дороге.</p>
                 </button>
             </div>
         </section>
@@ -380,21 +379,26 @@ function renderRoute(state) {
     return `
         <section class="screen-section">
             <article class="hero-card">
-                <span class="hero-kicker">Ковальский в пути / ${getStatusLabel(route.status)}</span>
-                <h2 class="hero-title">${route.title}</h2>
-                <p class="page-subtitle hero-meta">${route.region} · ${route.dateRange}</p>
-                <div class="hero-grid">
-                    <div class="metric-card" style="background: rgba(255,255,255,0.12); border-color: rgba(255,255,255,0.08);">
-                        <div class="metric-label" style="color: rgba(248,241,231,0.72);">Записей</div>
-                        <div class="metric-value">${route.moments.length}</div>
+                <div class="route-hero-shell">
+                    <h2 class="hero-title route-hero-title">${route.title}</h2>
+                    <div class="route-hero-meta-row">
+                        <span class="route-status status-${route.status}">${getStatusLabel(route.status)}</span>
+                        <span class="soft-pill route-hero-pill">${route.region}</span>
+                        <span class="soft-pill route-hero-pill">${route.dateRange}</span>
                     </div>
-                    <div class="metric-card" style="background: rgba(255,255,255,0.12); border-color: rgba(255,255,255,0.08);">
-                        <div class="metric-label" style="color: rgba(248,241,231,0.72);">Шагов</div>
-                        <div class="metric-value">${route.planSteps.length}</div>
-                    </div>
-                    <div class="metric-card" style="background: rgba(255,255,255,0.12); border-color: rgba(255,255,255,0.08);">
-                        <div class="metric-label" style="color: rgba(248,241,231,0.72);">Бюджет</div>
-                        <div class="metric-value" style="font-size: 18px;">${formatCurrency(totalExpenses)}</div>
+                    <div class="hero-stats route-hero-stats">
+                        <div class="hero-stat">
+                            <div class="hero-stat-value">${route.moments.length}</div>
+                            <div class="hero-stat-label">Записей</div>
+                        </div>
+                        <div class="hero-stat">
+                            <div class="hero-stat-value">${route.planSteps.length}</div>
+                            <div class="hero-stat-label">Шагов</div>
+                        </div>
+                        <div class="hero-stat">
+                            <div class="hero-stat-value">${formatCurrency(totalExpenses)}</div>
+                            <div class="hero-stat-label">Бюджет</div>
+                        </div>
                     </div>
                 </div>
             </article>
@@ -439,28 +443,12 @@ function renderRouteTab(route, tab, state) {
     }
 
     if (tab === 'plan') {
-        const planProgress = getPlanProgress(route);
-
         return `
             <div class="cards-stack">
                 <div class="sheet-card">
                     <div class="section-header">
                         <h3 class="section-title">План маршрута и отработка</h3>
                         <button class="section-link" data-capture="plan-step">+ Шаг</button>
-                    </div>
-                    <div class="inline-stat-row" style="margin-bottom: 10px;">
-                        <div class="inline-stat">
-                            <span class="metric-label">Всего шагов</span>
-                            <strong>${planProgress.total}</strong>
-                        </div>
-                        <div class="inline-stat">
-                            <span class="metric-label">В работе</span>
-                            <strong>${planProgress.doing}</strong>
-                        </div>
-                        <div class="inline-stat">
-                            <span class="metric-label">Отработано</span>
-                            <strong>${planProgress.done}</strong>
-                        </div>
                     </div>
                     <div class="cards-stack">
                         ${route.planSteps.length ? route.planSteps.map(step => `
