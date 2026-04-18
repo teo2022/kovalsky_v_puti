@@ -214,6 +214,35 @@ button {
     padding: 14px;
 }
 
+.plan-step-card {
+    border-radius: 20px;
+    padding: 14px;
+    background: rgba(255, 255, 255, 0.62);
+    border: 1px solid rgba(24, 50, 47, 0.06);
+}
+
+.plan-step-card.status-doing {
+    background: rgba(231, 105, 67, 0.08);
+}
+
+.plan-step-card.status-done {
+    background: rgba(22, 124, 116, 0.08);
+}
+
+.plan-result-box {
+    margin-top: 10px;
+    padding: 10px 12px;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.72);
+    border: 1px solid rgba(24, 50, 47, 0.05);
+}
+
+.plan-result-copy {
+    font-size: 12px;
+    line-height: 1.4;
+    color: var(--text);
+}
+
 .route-open {
     width: 100%;
     text-align: left;

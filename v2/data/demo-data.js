@@ -116,6 +116,38 @@ export const demoState = {
             drafts: [
                 { id: 'd-1', title: '5 кадров, которые продают ощущение дороги', status: 'draft' }
             ],
+            planSteps: [
+                {
+                    id: 'plan-a1',
+                    title: 'Рассвет на серпантине',
+                    type: 'shoot',
+                    time: '06:00',
+                    priority: 'high',
+                    status: 'done',
+                    note: 'Подняться затемно, снять общий план и проходку по дороге.',
+                    result: 'Сняты общий кадр, вертикаль и звук ветра. Можно собирать рилс.'
+                },
+                {
+                    id: 'plan-a2',
+                    title: 'Заправка и короткий food-stop',
+                    type: 'stop',
+                    time: '11:00',
+                    priority: 'medium',
+                    status: 'doing',
+                    note: 'Проверить локальную еду и снять деталь дорожной атмосферы.',
+                    result: 'Найдено кафе, нужно добрать крупные планы еды.'
+                },
+                {
+                    id: 'plan-a3',
+                    title: 'Доехать до стоянки у Чулышмана',
+                    type: 'logistics',
+                    time: '18:30',
+                    priority: 'high',
+                    status: 'todo',
+                    note: 'Успеть заселиться до темноты и проверить точку для вечернего кадра.',
+                    result: ''
+                }
+            ],
             checklists: [
                 {
                     id: 'c-1',
@@ -173,6 +205,28 @@ export const demoState = {
             drafts: [
                 { id: 'd-2', title: 'Маршрут спокойного северного уикенда', status: 'idea' }
             ],
+            planSteps: [
+                {
+                    id: 'plan-k1',
+                    title: 'Подтвердить катер по шхерам',
+                    type: 'logistics',
+                    time: '12:00',
+                    priority: 'high',
+                    status: 'doing',
+                    note: 'Согласовать время выхода и запасной слот на плохую погоду.',
+                    result: 'Есть два слота, жду подтверждение по утру.'
+                },
+                {
+                    id: 'plan-k2',
+                    title: 'Собрать спокойный moodboard поездки',
+                    type: 'content',
+                    time: '20:00',
+                    priority: 'medium',
+                    status: 'todo',
+                    note: 'Подобрать 5 референсов под туман, лодки и воду.',
+                    result: ''
+                }
+            ],
             checklists: [
                 {
                     id: 'c-2',
@@ -203,6 +257,7 @@ export const demoState = {
             ],
             expenses: [],
             drafts: [],
+            planSteps: [],
             checklists: []
         }
     ]

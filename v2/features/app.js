@@ -64,6 +64,10 @@ function summarizeExpense(expense, state) {
     };
 }
 
+function getExpenseDisplayTitle(expense, state) {
+    return getExpenseCategory(state, expense.category)?.label || expense.title || 'Расход';
+}
+
 function getChecklistProgress(checklist) {
     const total = checklist.items.length;
     const done = checklist.items.filter(item => item.done).length;
@@ -82,6 +86,40 @@ function getChecklistKindLabel(kind) {
 
 function serializeChecklistItems(checklist) {
     return (checklist?.items || []).map(item => item.label).join('\n');
+}
+
+function getPlanStepStatusLabel(status) {
+    return {
+        todo: 'Запланировано',
+        doing: 'В работе',
+        done: 'Отработано'
+    }[status] || 'План';
+}
+
+function getPlanStepTypeLabel(type) {
+    return {
+        logistics: 'Логистика',
+        shoot: 'Съемка',
+        stop: 'Остановка',
+        content: 'Контент',
+        meeting: 'Встреча'
+    }[type] || 'Шаг';
+}
+
+function getPlanStepPriorityLabel(priority) {
+    return {
+        high: 'Высокий',
+        medium: 'Средний',
+        low: 'Низкий'
+    }[priority] || 'Средний';
+}
+
+function getPlanProgress(route) {
+    const total = route.planSteps.length;
+    const done = route.planSteps.filter(item => item.status === 'done').length;
+    const doing = route.planSteps.filter(item => item.status === 'doing').length;
+
+    return { total, done, doing };
 }
 
 function buildHeader(state) {
@@ -122,7 +160,7 @@ function renderDashboard(state) {
     return `
         <section class="screen-section">
             <article class="hero-card">
-                <span class="hero-kicker">Ковальский в пути / travel OS</span>
+                <span class="hero-kicker">Ковальский в пути / маршрутная система</span>
                 <h2 class="hero-title">Маршрут как редакционный штаб в дороге.</h2>
                 <p class="page-subtitle" style="color: rgba(248, 241, 231, 0.8);">Внутри одного маршрута живут идеи, расходы, точки, черновики и экспорт. Не дневник, а рабочая машина для тревел-контента.</p>
                 <div class="hero-grid">
@@ -154,7 +192,7 @@ function renderDashboard(state) {
         <section class="screen-section">
             <div class="section-header">
                 <h3 class="section-title">Маршруты</h3>
-                <span class="section-link">3 режима: plan / active / spontaneous</span>
+                <span class="section-link">3 режима: план / в пути / спонтанно</span>
             </div>
             <div class="routes-stack">
                 ${state.routes.map(route => `
@@ -250,24 +288,20 @@ function renderRouteTab(route, tab, state) {
             <div class="cards-stack">
                 <div class="sheet-card">
                     <div class="section-header">
-                        <h3 class="section-title">Таймлайн и новые моменты</h3>
+                        <h3 class="section-title">История маршрута</h3>
                         <button class="section-link" data-capture="moment">+ Момент</button>
                     </div>
                     <div class="timeline-stack">
-                        ${route.moments.length ? route.moments.map(moment => `
+                        ${route.history.length ? route.history.map(entry => `
                             <div class="list-item" style="padding: 0;">
-                                <div class="list-badge">${getMomentIcon(moment.category)}</div>
+                                <div class="list-badge">${getHistoryIcon(entry.kind)}</div>
                                 <div class="list-body">
-                                    <p class="list-title">${moment.title}</p>
-                                    <div class="list-meta">${moment.location} · ${moment.createdAt}</div>
-                                    <div class="list-note">${moment.content}</div>
-                                </div>
-                                <div class="item-actions">
-                                    <button class="mini-action" data-action="edit-moment" data-item-id="${moment.id}">Ред.</button>
-                                    <button class="mini-action danger-link" data-action="delete-moment" data-item-id="${moment.id}">Удалить</button>
+                                    <p class="list-title">${entry.title}</p>
+                                    <div class="list-meta">${entry.meta} · ${entry.createdAt}</div>
+                                    ${entry.note ? `<div class="list-note">${entry.note}</div>` : ''}
                                 </div>
                             </div>
-                        `).join('') : `<p class="muted-copy">Пока нет моментов. Начни с быстрого capture flow.</p>`}
+                        `).join('') : `<p class="muted-copy">История пока пустая. Добавь момент, шаг, расход или работу по чеклисту, и событие появится здесь.</p>`}
                     </div>
                 </div>
             </div>
@@ -275,27 +309,56 @@ function renderRouteTab(route, tab, state) {
     }
 
     if (tab === 'plan') {
+        const planProgress = getPlanProgress(route);
+
         return `
             <div class="cards-stack">
                 <div class="sheet-card">
                     <div class="section-header">
-                        <h3 class="section-title">Точки маршрута</h3>
-                        <button class="section-link" data-capture="waypoint">+ Точка</button>
+                        <h3 class="section-title">План маршрута и отработка</h3>
+                        <button class="section-link" data-capture="plan-step">+ Шаг</button>
                     </div>
-                    ${route.waypoints.length ? route.waypoints.map(point => `
-                        <div class="list-item">
-                            <div class="list-badge">${point.visited ? '✓' : '•'}</div>
-                            <div class="list-body">
-                                <p class="list-title">${point.title}</p>
-                                <div class="list-meta">${point.type}</div>
-                                <div class="list-note">${point.note}</div>
-                            </div>
-                            <div class="item-actions">
-                                <button class="mini-action" data-action="edit-waypoint" data-item-id="${point.id}">Ред.</button>
-                                <button class="mini-action danger-link" data-action="delete-waypoint" data-item-id="${point.id}">Удалить</button>
-                            </div>
+                    <div class="inline-stat-row" style="margin-bottom: 10px;">
+                        <div class="inline-stat">
+                            <span class="metric-label">Всего шагов</span>
+                            <strong>${planProgress.total}</strong>
                         </div>
-                    `).join('') : `<p class="muted-copy">Добавь опорные точки, чтобы маршрут был готов и к поездке, и к контенту.</p>`}
+                        <div class="inline-stat">
+                            <span class="metric-label">В работе</span>
+                            <strong>${planProgress.doing}</strong>
+                        </div>
+                        <div class="inline-stat">
+                            <span class="metric-label">Отработано</span>
+                            <strong>${planProgress.done}</strong>
+                        </div>
+                    </div>
+                    <div class="cards-stack">
+                        ${route.planSteps.length ? route.planSteps.map(step => `
+                            <div class="plan-step-card status-${step.status}">
+                                <div class="section-header">
+                                    <div>
+                                        <div class="route-topline">
+                                            <span class="soft-pill">${step.time || 'Без времени'}</span>
+                                            <span class="soft-pill">${getPlanStepTypeLabel(step.type)}</span>
+                                            <span class="soft-pill">${getPlanStepPriorityLabel(step.priority)}</span>
+                                        </div>
+                                        <h4 class="route-title" style="font-size:15px;">${step.title}</h4>
+                                        <p class="route-desc">${getPlanStepStatusLabel(step.status)}</p>
+                                    </div>
+                                    <div class="item-actions">
+                                        <button class="mini-action" data-action="cycle-plan-step" data-item-id="${step.id}">${getPlanStepStatusLabel(step.status)}</button>
+                                        <button class="mini-action" data-action="edit-plan-step" data-item-id="${step.id}">Ред.</button>
+                                        <button class="mini-action danger-link" data-action="delete-plan-step" data-item-id="${step.id}">Удалить</button>
+                                    </div>
+                                </div>
+                                ${step.note ? `<p class="route-desc" style="margin-top: 8px;">${step.note}</p>` : ''}
+                                <div class="plan-result-box">
+                                    <div class="metric-label">Факт / результат</div>
+                                    <div class="plan-result-copy">${step.result || 'Пока без отработки. После выполнения зафиксируй результат в карточке шага.'}</div>
+                                </div>
+                            </div>
+                        `).join('') : `<p class="muted-copy">Собери план поездки по шагам: что снять, где остановиться, что проверить по дороге и что уже реально отработано.</p>`}
+                    </div>
                 </div>
                 <div class="sheet-card">
                     <div class="section-header">
@@ -355,8 +418,8 @@ function renderRouteTab(route, tab, state) {
                         <div class="list-item">
                             <div class="list-badge">${summary.icon}</div>
                             <div class="list-body">
-                                <p class="list-title">${expense.title}</p>
-                                <div class="list-meta">${summary.label} · ${expense.createdAt}</div>
+                                <p class="list-title">${getExpenseDisplayTitle(expense, state)}</p>
+                                <div class="list-meta">${expense.createdAt}</div>
                                 ${summary.details ? `<div class="list-note">${summary.details}</div>` : ''}
                             </div>
                             <strong>${formatCurrency(expense.amount)}</strong>
@@ -452,7 +515,7 @@ function renderSettings(state) {
                     `).join('')}
                 </div>
                 <div class="button-row">
-                    <button class="btn btn-secondary" data-action="reset-demo">Сбросить demo data</button>
+                    <button class="btn btn-secondary" data-action="reset-demo">Сбросить демоданные</button>
                 </div>
             </div>
         </section>
@@ -549,6 +612,7 @@ function renderModal(state) {
         if (type === 'moment') store.saveMoment(data);
         if (type === 'expense') store.saveExpense(data);
         if (type === 'waypoint') store.saveWaypoint(data);
+        if (type === 'plan-step') store.savePlanStep(data);
         if (type === 'checklist') store.saveChecklist(data);
         if (type === 'expense-category') store.saveExpenseCategory(data);
         if (type === 'expense-field') store.addExpenseField(data);
@@ -561,6 +625,7 @@ function buildModal(type, route, state) {
     const editingMoment = meta.itemId ? route.moments.find(item => item.id === meta.itemId) : null;
     const editingExpense = meta.itemId ? route.expenses.find(item => item.id === meta.itemId) : null;
     const editingWaypoint = meta.itemId ? route.waypoints.find(item => item.id === meta.itemId) : null;
+    const editingPlanStep = meta.itemId ? route.planSteps.find(item => item.id === meta.itemId) : null;
     const editingChecklist = meta.itemId ? route.checklists.find(item => item.id === meta.itemId) : null;
     const editingCategory = meta.categoryId ? getExpenseCategory(state, meta.categoryId) : null;
     const expenseCategoryOptions = state.expenseCategories.map(category => `
@@ -591,9 +656,9 @@ function buildModal(type, route, state) {
                 <input type="hidden" name="itemId" value="${editingMoment?.id || ''}">
                 <div class="field"><label>Заголовок</label><input name="title" required placeholder="Что произошло или зацепило?" value="${editingMoment?.title || ''}"></div>
                 <div class="field"><label>Категория</label><select name="category">
-                    <option value="insight" ${editingMoment?.category === 'insight' ? 'selected' : ''}>Insight</option>
-                    <option value="food" ${editingMoment?.category === 'food' ? 'selected' : ''}>Food</option>
-                    <option value="location" ${editingMoment?.category === 'location' ? 'selected' : ''}>Location</option>
+                    <option value="insight" ${editingMoment?.category === 'insight' ? 'selected' : ''}>Инсайт</option>
+                    <option value="food" ${editingMoment?.category === 'food' ? 'selected' : ''}>Еда</option>
+                    <option value="location" ${editingMoment?.category === 'location' ? 'selected' : ''}>Локация</option>
                 </select></div>
                 <div class="field"><label>Локация</label><input name="location" placeholder="${route.region}" value="${editingMoment?.location || ''}"></div>
                 <div class="field"><label>Текст</label><textarea name="content" required placeholder="Короткая мысль, эмоция, идея для поста или гида">${editingMoment?.content || ''}</textarea></div>
@@ -604,7 +669,6 @@ function buildModal(type, route, state) {
             badge: route.title,
             fields: `
                 <input type="hidden" name="itemId" value="${editingExpense?.id || ''}">
-                <div class="field"><label>Статья</label><input name="title" required placeholder="Топливо, еда, проживание" value="${editingExpense?.title || ''}"></div>
                 <div class="field"><label>Категория</label><select name="category">${expenseCategoryOptions}</select></div>
                 <div class="field"><label>Сумма</label><input name="amount" type="number" required placeholder="0" value="${editingExpense?.amount || ''}"></div>
                 <div class="field-grid" data-role="expense-fields"></div>
@@ -617,13 +681,41 @@ function buildModal(type, route, state) {
                 <input type="hidden" name="itemId" value="${editingWaypoint?.id || ''}">
                 <div class="field"><label>Название</label><input name="title" required placeholder="Кафе, перевал, стоянка" value="${editingWaypoint?.title || ''}"></div>
                 <div class="field"><label>Тип</label><select name="type">
-                    <option value="viewpoint" ${editingWaypoint?.type === 'viewpoint' ? 'selected' : ''}>Viewpoint</option>
-                    <option value="stay" ${editingWaypoint?.type === 'stay' ? 'selected' : ''}>Stay</option>
-                    <option value="food" ${editingWaypoint?.type === 'food' ? 'selected' : ''}>Food</option>
-                    <option value="city" ${editingWaypoint?.type === 'city' ? 'selected' : ''}>City</option>
-                    <option value="nature" ${editingWaypoint?.type === 'nature' ? 'selected' : ''}>Nature</option>
+                    <option value="viewpoint" ${editingWaypoint?.type === 'viewpoint' ? 'selected' : ''}>Смотровая точка</option>
+                    <option value="stay" ${editingWaypoint?.type === 'stay' ? 'selected' : ''}>Стоянка</option>
+                    <option value="food" ${editingWaypoint?.type === 'food' ? 'selected' : ''}>Еда</option>
+                    <option value="city" ${editingWaypoint?.type === 'city' ? 'selected' : ''}>Город</option>
+                    <option value="nature" ${editingWaypoint?.type === 'nature' ? 'selected' : ''}>Природа</option>
                 </select></div>
                 <div class="field"><label>Заметка</label><textarea name="note" placeholder="Зачем едем, что снять, что проверить">${editingWaypoint?.note || ''}</textarea></div>
+            `
+        },
+        'plan-step': {
+            title: editingPlanStep ? 'Редактировать шаг плана' : 'Новый шаг плана',
+            badge: route.title,
+            fields: `
+                <input type="hidden" name="itemId" value="${editingPlanStep?.id || ''}">
+                <div class="field"><label>Шаг</label><input name="title" required placeholder="Что нужно сделать по маршруту" value="${editingPlanStep?.title || ''}"></div>
+                <div class="field"><label>Время</label><input name="time" placeholder="06:30" value="${editingPlanStep?.time || ''}"></div>
+                <div class="field"><label>Тип</label><select name="type">
+                    <option value="logistics" ${editingPlanStep?.type === 'logistics' ? 'selected' : ''}>Логистика</option>
+                    <option value="shoot" ${editingPlanStep?.type === 'shoot' ? 'selected' : ''}>Съемка</option>
+                    <option value="stop" ${editingPlanStep?.type === 'stop' ? 'selected' : ''}>Остановка</option>
+                    <option value="content" ${editingPlanStep?.type === 'content' ? 'selected' : ''}>Контент</option>
+                    <option value="meeting" ${editingPlanStep?.type === 'meeting' ? 'selected' : ''}>Встреча</option>
+                </select></div>
+                <div class="field"><label>Приоритет</label><select name="priority">
+                    <option value="high" ${editingPlanStep?.priority === 'high' ? 'selected' : ''}>Высокий</option>
+                    <option value="medium" ${editingPlanStep?.priority === 'medium' || !editingPlanStep ? 'selected' : ''}>Средний</option>
+                    <option value="low" ${editingPlanStep?.priority === 'low' ? 'selected' : ''}>Низкий</option>
+                </select></div>
+                <div class="field"><label>Статус</label><select name="status">
+                    <option value="todo" ${editingPlanStep?.status === 'todo' || !editingPlanStep ? 'selected' : ''}>Запланировано</option>
+                    <option value="doing" ${editingPlanStep?.status === 'doing' ? 'selected' : ''}>В работе</option>
+                    <option value="done" ${editingPlanStep?.status === 'done' ? 'selected' : ''}>Отработано</option>
+                </select></div>
+                <div class="field"><label>План</label><textarea name="note" placeholder="Что именно нужно сделать, проверить или снять">${editingPlanStep?.note || ''}</textarea></div>
+                <div class="field"><label>Факт / отработка</label><textarea name="result" placeholder="Что реально получилось, что снято, что перенесено">${editingPlanStep?.result || ''}</textarea></div>
             `
         },
         checklist: {
@@ -659,8 +751,8 @@ function buildModal(type, route, state) {
                 <input type="hidden" name="categoryId" value="${meta.categoryId || ''}">
                 <div class="field"><label>Ключ поля</label><input name="id" placeholder="например: parking_hours"></div>
                 <div class="field"><label>Название</label><input name="label" required placeholder="Например: Часов"></div>
-                <div class="field"><label>Тип</label><select name="type"><option value="text">Text</option><option value="number">Number</option><option value="select">Select</option></select></div>
-                <div class="field"><label>Placeholder</label><input name="placeholder" placeholder="Подсказка для ввода"></div>
+                <div class="field"><label>Тип</label><select name="type"><option value="text">Текст</option><option value="number">Число</option><option value="select">Список</option></select></div>
+                <div class="field"><label>Подсказка</label><input name="placeholder" placeholder="Подсказка для ввода"></div>
                 <div class="field"><label>Опции для select</label><input name="options" placeholder="через запятую, если тип = select"></div>
             `
         }
@@ -686,7 +778,7 @@ function buildExport(route, state) {
     const expenseLines = route.expenses.length
         ? route.expenses.map(item => {
             const summary = summarizeExpense(item, state);
-            return `- ${item.title}: ${formatCurrency(item.amount)} (${summary.label}${summary.details ? ` / ${summary.details}` : ''})`;
+            return `- ${getExpenseDisplayTitle(item, state)}: ${formatCurrency(item.amount)} (${summary.label}${summary.details ? ` / ${summary.details}` : ''})`;
         }).join('\n')
         : '- Пока пусто';
     const checklistLines = route.checklists.length
@@ -695,8 +787,11 @@ function buildExport(route, state) {
             return `- ${checklist.title} (${progress.done}/${progress.total})`;
         }).join('\n')
         : '- Пока нет чеклистов';
+    const planLines = route.planSteps.length
+        ? route.planSteps.map(step => `- ${step.time || '--:--'} · ${step.title} [${getPlanStepStatusLabel(step.status)}]`).join('\n')
+        : '- Пока нет шагов плана';
 
-    return `# ${route.title}\n\nСтатус: ${getStatusLabel(route.status)}\nРегион: ${route.region}\nДаты: ${route.dateRange}\n\n## Хуки\n${highlights || '- Пока нет собранных моментов'}\n\n## Бюджет\n${expenseLines}\n\n## Точки\n${route.waypoints.length ? route.waypoints.map(point => `- ${point.title} (${point.type})`).join('\n') : '- Пока нет точек'}\n\n## Чеклисты\n${checklistLines}`;
+    return `# ${route.title}\n\nСтатус: ${getStatusLabel(route.status)}\nРегион: ${route.region}\nДаты: ${route.dateRange}\n\n## Хуки\n${highlights || '- Пока нет собранных моментов'}\n\n## План\n${planLines}\n\n## Бюджет\n${expenseLines}\n\n## Чеклисты\n${checklistLines}`;
 }
 
 function getStatusLabel(status) {
@@ -713,6 +808,15 @@ function getMomentIcon(category) {
         food: '◌',
         location: '⌘'
     }[category] || '•';
+}
+
+function getHistoryIcon(kind) {
+    return {
+        moment: '✦',
+        expense: '₽',
+        plan: '✓',
+        checklist: '☑'
+    }[kind] || '•';
 }
 
 function getTabLabel(tab) {
@@ -801,6 +905,18 @@ function bindMainEvents(state) {
 
     mainEl.querySelectorAll('[data-action="delete-waypoint"]').forEach(button => {
         button.addEventListener('click', () => store.deleteWaypoint(route.id, button.dataset.itemId));
+    });
+
+    mainEl.querySelectorAll('[data-action="edit-plan-step"]').forEach(button => {
+        button.addEventListener('click', () => store.openCapture('plan-step', { itemId: button.dataset.itemId }));
+    });
+
+    mainEl.querySelectorAll('[data-action="delete-plan-step"]').forEach(button => {
+        button.addEventListener('click', () => store.deletePlanStep(route.id, button.dataset.itemId));
+    });
+
+    mainEl.querySelectorAll('[data-action="cycle-plan-step"]').forEach(button => {
+        button.addEventListener('click', () => store.cyclePlanStepStatus(route.id, button.dataset.itemId));
     });
 
     mainEl.querySelectorAll('[data-action="edit-checklist"]').forEach(button => {
