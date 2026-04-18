@@ -153,7 +153,10 @@ function ensureStateShape(state) {
         ? safeState.expenseCategories
         : clone(defaultExpenseCategories);
 
-    safeState.routes = Array.isArray(safeState.routes) && safeState.routes.length
+    const hasRoutesArray = Array.isArray(safeState.routes);
+    const hasClearedDemo = Boolean(safeState.meta?.demoCleared);
+
+    safeState.routes = hasRoutesArray
         ? safeState.routes.map(route => {
             const shapedRoute = createRouteShape(route);
             shapedRoute.checklists = shapedRoute.checklists.map(normalizeChecklist);
@@ -163,7 +166,7 @@ function ensureStateShape(state) {
                 : buildLegacyHistory(shapedRoute, safeState.expenseCategories);
             return shapedRoute;
         })
-        : clone(demoState.routes).map(route => {
+        : hasClearedDemo ? [] : clone(demoState.routes).map(route => {
             const shapedRoute = createRouteShape(route);
             shapedRoute.checklists = shapedRoute.checklists.map(normalizeChecklist);
             shapedRoute.planSteps = shapedRoute.planSteps.map(normalizePlanStep);
@@ -175,10 +178,14 @@ function ensureStateShape(state) {
 
     safeState.ui = {
         screen: safeState.ui?.screen || 'dashboard',
-        selectedRouteId: safeState.ui?.selectedRouteId || safeState.routes[0].id,
+        selectedRouteId: safeState.ui?.selectedRouteId || safeState.routes[0]?.id || null,
         routeTab: safeState.ui?.routeTab || 'timeline',
         captureType: safeState.ui?.captureType || null,
         captureMeta: safeState.ui?.captureMeta || null
+    };
+
+    safeState.meta = {
+        demoCleared: hasClearedDemo
     };
 
     return safeState;
@@ -595,6 +602,18 @@ function createStore() {
         },
         reset() {
             state = ensureStateShape(clone(demoState));
+            notify();
+        },
+        clearDemoContent() {
+            state.routes = [];
+            state.ui.screen = 'dashboard';
+            state.ui.selectedRouteId = null;
+            state.ui.routeTab = 'timeline';
+            closeCaptureState();
+            state.meta = {
+                ...(state.meta || {}),
+                demoCleared: true
+            };
             notify();
         }
     };

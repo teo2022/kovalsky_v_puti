@@ -5,6 +5,7 @@ const headerEl = document.getElementById('app-header');
 const mainEl = document.getElementById('app-main');
 const navEl = document.getElementById('bottom-nav');
 const modalRoot = document.getElementById('modal-root');
+const INTRO_NOTICE_KEY = 'kovalsky_v_puti_intro_notice_seen';
 
 const screenMeta = {
     dashboard: {
@@ -43,6 +44,20 @@ function countAllExpenses(routes) {
 
 function getSelectedRoute(state) {
     return state.routes.find(route => route.id === state.ui.selectedRouteId) || state.routes[0];
+}
+
+function renderNoRoutesState() {
+    return `
+        <section class="screen-section">
+            <article class="list-card">
+                <h3 class="section-title" style="margin-bottom: 8px;">Маршрутов пока нет</h3>
+                <p class="muted-copy">Ознакомительные данные очищены. Создай свой первый маршрут и начинай вести поездку уже на своих данных.</p>
+                <div class="button-row">
+                    <button class="btn btn-primary" data-capture="route">Создать маршрут</button>
+                </div>
+            </article>
+        </section>
+    `;
 }
 
 function getExpenseCategory(state, categoryId) {
@@ -245,6 +260,9 @@ function renderDashboard(state) {
 
 function renderRoute(state) {
     const route = getSelectedRoute(state);
+    if (!route) {
+        return renderNoRoutesState();
+    }
     const totalExpenses = route.expenses.reduce((sum, expense) => sum + expense.amount, 0);
 
     return `
@@ -449,6 +467,9 @@ function renderRouteTab(route, tab, state) {
 
 function renderLibrary(state) {
     const route = getSelectedRoute(state);
+    if (!route) {
+        return renderNoRoutesState();
+    }
 
     return `
         <section class="screen-section">
@@ -515,7 +536,7 @@ function renderSettings(state) {
                     `).join('')}
                 </div>
                 <div class="button-row">
-                    <button class="btn btn-secondary" data-action="reset-demo">Сбросить демоданные</button>
+                    <button class="btn btn-secondary" data-action="clear-demo">Удалить ознакомительные данные</button>
                 </div>
             </div>
         </section>
@@ -851,6 +872,10 @@ function bindMainEvents(state) {
         button.addEventListener('click', () => store.reset());
     });
 
+    mainEl.querySelectorAll('[data-action="clear-demo"]').forEach(button => {
+        button.addEventListener('click', () => store.clearDemoContent());
+    });
+
     mainEl.querySelectorAll('[data-action="open-expense-settings"]').forEach(button => {
         button.addEventListener('click', () => store.navigate('settings'));
     });
@@ -950,5 +975,15 @@ function render(state) {
     renderModal(state);
 }
 
+function maybeShowIntroNotice() {
+    if (localStorage.getItem(INTRO_NOTICE_KEY)) {
+        return;
+    }
+
+    window.alert('В приложении добавлены ознакомительные маршруты, моменты и расходы. Их можно удалить в разделе "Система" кнопкой "Удалить ознакомительные данные". Категории расходов и их поля при этом сохранятся.');
+    localStorage.setItem(INTRO_NOTICE_KEY, '1');
+}
+
 store.subscribe(render);
 render(store.getState());
+maybeShowIntroNotice();
