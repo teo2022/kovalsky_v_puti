@@ -1,25 +1,27 @@
 {
   "name": "Ковальский в пути",
   "short_name": "КВП",
+  "id": "/v2/index.html",
   "description": "Система маршрутов, заметок, расходов и истории поездки.",
   "lang": "ru",
-  "start_url": "./v2/index.html",
+  "start_url": "/v2/index.html",
   "scope": "./",
   "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
   "orientation": "portrait",
   "background_color": "#f6efe5",
   "theme_color": "#18322f",
   "icons": [
     {
-      "src": "./assets/pwa/icon-192.svg",
+      "src": "/assets/pwa/icon-192.png",
       "sizes": "192x192",
-      "type": "image/svg+xml",
+      "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "./assets/pwa/icon-512.svg",
+      "src": "/assets/pwa/icon-512.png",
       "sizes": "512x512",
-      "type": "image/svg+xml",
+      "type": "image/png",
       "purpose": "any"
     }
   ]
