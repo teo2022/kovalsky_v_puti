@@ -326,7 +326,7 @@ function renderDashboard(state) {
                             </div>
                             <h4 class="route-title">${route.title}</h4>
                             <p class="route-desc">${route.coverMood}</p>
-                            <div class="inline-stat-row" style="margin-top: 10px;">
+                            <div class="inline-stat-row route-card-stats">
                                 <div class="inline-stat">
                                     <span class="metric-label">Записи</span>
                                     <strong>${route.moments.length}</strong>
@@ -378,7 +378,7 @@ function renderRoute(state) {
 
     return `
         <section class="screen-section">
-            <article class="hero-card">
+            <article class="hero-card hero-card-route">
                 <div class="route-hero-shell">
                     <h2 class="hero-title route-hero-title">${route.title}</h2>
                     <div class="route-hero-meta-row">
@@ -427,7 +427,7 @@ function renderRouteTab(route, tab, state) {
                     </div>
                     <div class="timeline-stack">
                         ${route.history.length ? route.history.map(entry => `
-                            <div class="list-item" style="padding: 0;">
+                            <div class="list-item list-item-history">
                                 <div class="list-badge">${getHistoryIcon(entry.kind)}</div>
                                 <div class="list-body">
                                     <p class="list-title">${entry.title}</p>
@@ -460,7 +460,7 @@ function renderRouteTab(route, tab, state) {
                                             <span class="soft-pill">${getPlanStepTypeLabel(step.type)}</span>
                                             <span class="soft-pill">${getPlanStepPriorityLabel(step.priority)}</span>
                                         </div>
-                                        <h4 class="route-title" style="font-size:15px;">${step.title}</h4>
+                                        <h4 class="route-title route-title-sm">${step.title}</h4>
                                         <p class="route-desc">${getPlanStepStatusLabel(step.status)}</p>
                                     </div>
                                     <div class="item-actions">
@@ -469,7 +469,7 @@ function renderRouteTab(route, tab, state) {
                                         <button class="mini-action danger-link" data-action="delete-plan-step" data-item-id="${step.id}" data-title="${step.title}">Удалить</button>
                                     </div>
                                 </div>
-                                ${step.note ? `<p class="route-desc" style="margin-top: 8px;">${step.note}</p>` : ''}
+                                ${step.note ? `<p class="route-desc route-note-spaced">${step.note}</p>` : ''}
                                 <div class="plan-result-box">
                                     <div class="metric-label">Факт / результат</div>
                                     <div class="plan-result-copy">${step.result || 'Пока без отработки. После выполнения зафиксируй результат в карточке шага.'}</div>
@@ -484,7 +484,7 @@ function renderRouteTab(route, tab, state) {
                         <button class="section-link" data-capture="checklist">+ Чеклист</button>
                     </div>
                     <div class="cards-stack">
-                        ${route.drafts.map(draft => `<div class="route-card"><div class="route-topline"><span class="soft-pill">${draft.status}</span></div><h4 class="route-title" style="font-size:15px;">${draft.title}</h4></div>`).join('')}
+                        ${route.drafts.map(draft => `<div class="route-card"><div class="route-topline"><span class="soft-pill">${draft.status}</span></div><h4 class="route-title route-title-sm">${draft.title}</h4></div>`).join('')}
                         ${route.checklists.length ? route.checklists.map(checklist => {
                             const progress = getChecklistProgress(checklist);
                             return `
@@ -494,9 +494,9 @@ function renderRouteTab(route, tab, state) {
                                             <div class="route-topline">
                                                 <span class="soft-pill">${getChecklistKindLabel(checklist.kind)}</span>
                                             </div>
-                                            <h4 class="route-title" style="font-size:15px;">${checklist.title}</h4>
+                                            <h4 class="route-title route-title-sm">${checklist.title}</h4>
                                             <p class="route-desc">${progress.done} / ${progress.total} выполнено</p>
-                                            ${checklist.note ? `<p class="route-desc" style="margin-top:6px;">${checklist.note}</p>` : ''}
+                                            ${checklist.note ? `<p class="route-desc route-note-compact">${checklist.note}</p>` : ''}
                                         </div>
                                         <div class="item-actions">
                                             <button class="mini-action" data-action="edit-checklist" data-item-id="${checklist.id}">Ред.</button>
@@ -592,7 +592,7 @@ function renderLibrary(state) {
                             <span class="chip">${routeItem.title}</span>
                             <span class="soft-pill">${moment.category}</span>
                         </div>
-                        <h4 class="route-title" style="font-size: 16px;">${moment.title}</h4>
+                        <h4 class="route-title route-title-archive">${moment.title}</h4>
                         <p class="route-desc">${moment.content}</p>
                         <div class="item-actions item-actions-inline">
                             <button class="mini-action" data-action="edit-moment" data-route-id="${routeItem.id}" data-item-id="${moment.id}">Ред.</button>
@@ -617,9 +617,9 @@ function renderSettings(state) {
                     ${state.expenseCategories.map(category => `
                         <div class="route-card">
                             <div class="section-header">
-                                <div class="chip-row">
+                                <div class="chip-row chip-title-row">
                                     <span class="soft-pill">${category.icon}</span>
-                                    <h4 class="route-title" style="margin:0; font-size:15px;">${category.label}</h4>
+                                    <h4 class="route-title route-title-sm route-title-inline">${category.label}</h4>
                                 </div>
                                 <div class="compact-actions">
                                     <button class="section-link" data-action="edit-expense-category" data-category-id="${category.id}">Изм.</button>

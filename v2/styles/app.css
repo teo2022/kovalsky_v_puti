@@ -144,6 +144,11 @@ button {
         radial-gradient(circle at top left, rgba(196, 162, 120, 0.24), transparent 35%);
 }
 
+.hero-card-route {
+    padding-top: 16px;
+    padding-bottom: 16px;
+}
+
 .hero-kicker {
     display: inline-flex;
     padding: 6px 10px;
@@ -392,11 +397,46 @@ button {
     border-color: rgba(24, 50, 47, 0.1);
 }
 
+.route-hero-meta-row .soft-pill,
+.route-hero-meta-row .route-status {
+    color: #fffdf8;
+    border-color: rgba(255, 255, 255, 0.18);
+    text-shadow: 0 1px 0 rgba(18, 29, 27, 0.16);
+}
+
+.route-hero-meta-row .soft-pill {
+    background: rgba(255, 255, 255, 0.18);
+}
+
+.route-hero-meta-row .status-planned {
+    background: rgba(120, 138, 172, 0.28);
+}
+
+.route-hero-meta-row .status-active {
+    background: rgba(90, 136, 124, 0.28);
+}
+
+.route-hero-meta-row .status-spontaneous {
+    background: rgba(185, 110, 77, 0.3);
+}
+
 .route-title {
     margin: 6px 0 3px;
     font-size: 16px;
     font-weight: 800;
     color: var(--text);
+}
+
+.route-title-sm {
+    font-size: 15px;
+}
+
+.route-title-archive {
+    font-size: 16px;
+}
+
+.route-title-inline {
+    margin: 0;
 }
 
 .route-desc,
@@ -407,12 +447,24 @@ button {
     color: var(--text-muted);
 }
 
+.route-note-spaced {
+    margin-top: 8px;
+}
+
+.route-note-compact {
+    margin-top: 6px;
+}
+
 .inline-stat {
     min-width: calc(50% - 4px);
     background: rgba(247, 249, 248, 0.98);
     border-radius: 15px;
     padding: 8px 10px;
     border: 1px solid rgba(24, 50, 47, 0.08);
+}
+
+.route-card-stats {
+    margin-top: 10px;
 }
 
 .inline-stat strong {
@@ -476,6 +528,10 @@ button {
     align-items: flex-start;
 }
 
+.list-item-history {
+    padding: 0;
+}
+
 .list-item + .list-item {
     border-top: 1px solid var(--line);
 }
@@ -499,6 +555,10 @@ button {
 
 .item-actions {
     flex: 0 0 auto;
+}
+
+.chip-title-row {
+    align-items: center;
 }
 
 .list-title {
