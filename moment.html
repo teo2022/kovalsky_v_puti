@@ -56,6 +56,7 @@
         .ritual-card:hover { transform: scale(1.02); }
         .ritual-card.selected { ring: 4px; ring-color: #3b82f6; background-color: #eff6ff; }
     </style>
+    <script src="js/core/app-core.js"></script>
     <script src="navigation.js"></script>
 </head>
 <body class="h-screen flex flex-col overflow-hidden">
@@ -306,7 +307,13 @@
 
     <script>
         // ==================== STATE MANAGEMENT ====================
-        const STORAGE_KEY = 'kowalski_travel_diary_rituals_v1';
+        const STORAGE_KEY = 'kowalski_travel_diary_app_v2';
+        const LEGACY_STORAGE_KEYS = [
+            'kowalski_travel_diary_full_v1',
+            'kowalski_travel_diary_active_v2',
+            'kowalski_travel_diary_rituals_v1',
+            'kowalski_travel_diary_planned_v1'
+        ];
         
         let state = { routes: [], rituals: [], customTags: [] };
         let currentPage = 'dashboard';
@@ -324,6 +331,98 @@
         // Ritual state
         let selectedRitualCategory = null;
         let lastExportRitualContent = '';
+        const createEmptyState = window.AppCore.createEmptyState;
+        const clearLegacyStorage = window.AppCore.clearLegacyStorage;
+
+        mergeList = window.AppCore.mergeList;
+        normalizeRoute = window.AppCore.normalizeRoute;
+        loadStateFromKeys = window.AppCore.loadStateFromKeys;
+
+        function mergeList(primary = [], secondary = []) {
+            const result = [];
+            const seen = new Set();
+
+            [...primary, ...secondary].forEach(item => {
+                const signature = item && typeof item === 'object'
+                    ? (item.id ? `id:${item.id}` : JSON.stringify(item))
+                    : String(item);
+
+                if (!seen.has(signature)) {
+                    seen.add(signature);
+                    result.push(item);
+                }
+            });
+
+            return result;
+        }
+
+        function normalizeRoute(route = {}) {
+            return {
+                id: route.id || Date.now().toString(),
+                title: route.title || 'Новый маршрут',
+                date: route.date || new Date().toLocaleDateString('ru-RU'),
+                type: route.type || 'planned',
+                waypoints: Array.isArray(route.waypoints) ? route.waypoints : [],
+                notes: Array.isArray(route.notes) ? route.notes : [],
+                expenses: Array.isArray(route.expenses) ? route.expenses : [],
+                drafts: Array.isArray(route.drafts) ? route.drafts : [],
+                checklists: Array.isArray(route.checklists) ? route.checklists : [],
+                routeSegments: Array.isArray(route.routeSegments) ? route.routeSegments : [],
+                gpsPoints: Array.isArray(route.gpsPoints) ? route.gpsPoints : []
+            };
+        }
+
+        function mergeRoutes(primary = [], secondary = []) {
+            const routeMap = new Map();
+
+            [...secondary, ...primary].forEach(route => {
+                const normalized = normalizeRoute(route);
+                const existing = routeMap.get(normalized.id);
+
+                if (!existing) {
+                    routeMap.set(normalized.id, normalized);
+                    return;
+                }
+
+                routeMap.set(normalized.id, {
+                    ...existing,
+                    ...normalized,
+                    waypoints: mergeList(existing.waypoints, normalized.waypoints),
+                    notes: mergeList(existing.notes, normalized.notes),
+                    expenses: mergeList(existing.expenses, normalized.expenses),
+                    drafts: mergeList(existing.drafts, normalized.drafts),
+                    checklists: mergeList(existing.checklists, normalized.checklists),
+                    routeSegments: mergeList(existing.routeSegments, normalized.routeSegments),
+                    gpsPoints: mergeList(existing.gpsPoints, normalized.gpsPoints)
+                });
+            });
+
+            return Array.from(routeMap.values());
+        }
+
+        function normalizeState(rawState = {}) {
+            return {
+                routes: mergeRoutes(rawState.routes || []),
+                spontaneousNotes: mergeList(rawState.spontaneousNotes || []),
+                rituals: mergeList(rawState.rituals || []),
+                customTags: mergeList(rawState.customTags || [])
+            };
+        }
+
+        function loadStateFromKeys(keys) {
+            return keys.reduce((acc, key) => {
+                const saved = localStorage.getItem(key);
+                if (!saved) return acc;
+
+                const parsed = normalizeState(JSON.parse(saved));
+                return {
+                    routes: mergeRoutes(acc.routes, parsed.routes),
+                    spontaneousNotes: mergeList(acc.spontaneousNotes, parsed.spontaneousNotes),
+                    rituals: mergeList(acc.rituals, parsed.rituals),
+                    customTags: mergeList(acc.customTags, parsed.customTags)
+                };
+            }, { routes: [], spontaneousNotes: [], rituals: [], customTags: [] });
+        }
 
         // ==================== RITUAL CATEGORIES CONFIG ====================
         const RITUAL_CATEGORIES = {
@@ -440,20 +539,17 @@
         // ==================== STORAGE ====================
         function loadState() {
             try {
-                const saved = localStorage.getItem(STORAGE_KEY);
-                if (saved) state = JSON.parse(saved);
-                if (!state.rituals) state.rituals = [];
-                if (!state.routes) state.routes = [];
-                if (!state.customTags) state.customTags = [];
+                state = loadStateFromKeys([STORAGE_KEY, ...LEGACY_STORAGE_KEYS]);
+                saveState(false);
             } catch (e) {
-                state = { routes: [], rituals: [], customTags: [] };
+                state = createEmptyState();
             }
         }
 
-        function saveState() {
+        function saveState(showMessage = true) {
             try {
                 localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-                showToast('Сохранено!');
+                if (showMessage) showToast('Сохранено!');
             } catch (e) {
                 showToast('Ошибка!');
             }
@@ -462,7 +558,8 @@
         function resetAllData() {
             if (confirm('Все данные будут удалены!')) {
                 localStorage.removeItem(STORAGE_KEY);
-                state = { routes: [], rituals: [], customTags: [] };
+                clearLegacyStorage();
+                state = createEmptyState();
                 init();
                 closeSettings();
                 showToast('Данные сброшены');
@@ -1119,13 +1216,12 @@
 
         function handleCreateRoute(e) {
             e.preventDefault();
-            state.routes.unshift({
+            state.routes.unshift(normalizeRoute({
                 id: Date.now().toString(),
                 title: document.getElementById('create-title').value,
                 date: document.getElementById('create-date').value,
-                type: document.querySelector('input[name="route-type"]:checked').value,
-                waypoints: [], notes: [], expenses: []
-            });
+                type: document.querySelector('input[name="route-type"]:checked').value
+            }, 'planned'));
             saveState();
             closeCreateRouteModal();
             renderDashboard();
@@ -1133,7 +1229,92 @@
         }
 
         function openRouteDetail(routeId) {
-            showToast('Переход к маршруту: ' + routeId);
+            const route = state.routes.find(item => item.id === routeId);
+            if (!route) {
+                showToast('Маршрут не найден');
+                return;
+            }
+
+            if (route.type === 'spontaneous') {
+                currentPage = 'route';
+                currentRouteId = route.id;
+                currentRoute = route;
+                renderRouteOverview();
+                return;
+            }
+
+            sessionStorage.setItem('currentRouteId', routeId);
+            window.location.href = route.type === 'active' ? 'drive.html' : 'wait.html';
+        }
+
+        function renderRouteOverview() {
+            if (!currentRoute) return;
+
+            const main = document.getElementById('main-view');
+            const linkedRituals = state.rituals.filter(ritual => ritual.routeId === currentRoute.id);
+            const linkedTags = linkedRituals.reduce((tags, ritual) => mergeList(tags, ritual.tags || []), []);
+
+            main.innerHTML = `
+                <div class="p-4 space-y-4 fade-in pb-24">
+                    <div class="bg-white rounded-3xl shadow-sm border border-gray-100 p-5">
+                        <div class="flex items-start justify-between gap-4">
+                            <div>
+                                <p class="text-xs uppercase tracking-[0.2em] text-yellow-600 font-semibold">Спонтанный маршрут</p>
+                                <h2 class="text-2xl font-bold text-gray-900 mt-2">${currentRoute.title}</h2>
+                                <p class="text-sm text-gray-500 mt-1">${currentRoute.date}</p>
+                            </div>
+                            <span class="bg-yellow-100 text-yellow-700 px-3 py-1 rounded-full text-xs font-bold">⚡ Активен</span>
+                        </div>
+                        <div class="grid grid-cols-3 gap-3 mt-5">
+                            <div class="bg-yellow-50 rounded-2xl p-3">
+                                <div class="text-2xl font-bold text-yellow-700">${linkedRituals.length}</div>
+                                <div class="text-xs text-yellow-700/80">моментов</div>
+                            </div>
+                            <div class="bg-blue-50 rounded-2xl p-3">
+                                <div class="text-2xl font-bold text-blue-700">${currentRoute.notes.length}</div>
+                                <div class="text-xs text-blue-700/80">заметок</div>
+                            </div>
+                            <div class="bg-green-50 rounded-2xl p-3">
+                                <div class="text-2xl font-bold text-green-700">${linkedTags.length}</div>
+                                <div class="text-xs text-green-700/80">тегов</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex gap-3">
+                        <button onclick="openRitualModal()" class="flex-1 gradient-yellow text-white font-bold py-3.5 rounded-2xl shadow-md">+ Новый момент</button>
+                        <button onclick="navigateTo('export')" class="flex-1 bg-gray-900 text-white font-bold py-3.5 rounded-2xl shadow-md">Экспорт</button>
+                    </div>
+                    <div class="bg-white rounded-3xl shadow-sm border border-gray-100 p-5">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-lg font-bold text-gray-900">Привязанные моменты</h3>
+                            <span class="text-sm text-gray-400">${linkedRituals.length}</span>
+                        </div>
+                        ${linkedRituals.length ? `
+                            <div class="space-y-3">
+                                ${linkedRituals.map(ritual => `
+                                    <button onclick="viewRitual('${ritual.id}')" class="w-full text-left rounded-2xl border border-gray-100 p-4 hover:bg-gray-50 transition-all">
+                                        <div class="flex items-start gap-3">
+                                            <div class="w-11 h-11 ${RITUAL_CATEGORIES[ritual.category]?.gradient || 'gradient-yellow'} rounded-2xl flex items-center justify-center text-white text-xl flex-shrink-0">${ritual.categoryIcon}</div>
+                                            <div class="min-w-0 flex-1">
+                                                <div class="flex items-center justify-between gap-2">
+                                                    <h4 class="font-semibold text-gray-900 truncate">${ritual.categoryName}</h4>
+                                                    <span class="text-xs text-gray-400">${new Date(ritual.timestamp).toLocaleDateString('ru-RU')}</span>
+                                                </div>
+                                                <p class="text-sm text-gray-500 mt-1">${ritual.location}</p>
+                                                <p class="text-sm text-gray-700 mt-2 line-clamp-2">${ritual.notes || 'Без заметки'}</p>
+                                            </div>
+                                        </div>
+                                    </button>
+                                `).join('')}
+                            </div>
+                        ` : `
+                            <div class="rounded-2xl bg-gray-50 p-5 text-sm text-gray-500">
+                                Пока ничего не привязано к этому маршруту. Добавьте новый момент и выберите маршрут в форме.
+                            </div>
+                        `}
+                    </div>
+                </div>
+            `;
         }
 
         // ==================== GPS ====================
@@ -1203,9 +1384,17 @@
                 const routeExists = state.routes.find(r => r.id === savedRouteId);
                 if (routeExists && routeExists.type === 'spontaneous') {
                     currentRouteId = savedRouteId;
+                    currentRoute = routeExists;
                 }
                 // Очищаем sessionStorage после использования
                 sessionStorage.removeItem('currentRouteId');
+            }
+
+            if (currentRoute) {
+                currentPage = 'route';
+                renderRouteOverview();
+                updateStats();
+                return;
             }
 
             navigateTo('dashboard');

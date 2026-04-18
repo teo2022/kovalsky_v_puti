@@ -45,6 +45,7 @@
             box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
         }
     </style>
+    <script src="js/core/app-core.js"></script>
     <script src="navigation.js"></script>
 </head>
 <body class="h-screen flex flex-col overflow-hidden">
@@ -189,7 +190,13 @@
 
     <script>
         // --- State Management ---
-        const STORAGE_KEY = 'kowalski_travel_diary_full_v1';
+        const STORAGE_KEY = 'kowalski_travel_diary_app_v2';
+        const LEGACY_STORAGE_KEYS = [
+            'kowalski_travel_diary_full_v1',
+            'kowalski_travel_diary_active_v2',
+            'kowalski_travel_diary_rituals_v1',
+            'kowalski_travel_diary_planned_v1'
+        ];
         
         let state = {
             routes: [],
@@ -199,26 +206,114 @@
 
         let currentView = 'export';
         let lastExportContent = '';
+        const createEmptyState = window.AppCore.createEmptyState;
+        const clearLegacyStorage = window.AppCore.clearLegacyStorage;
+
+        mergeList = window.AppCore.mergeList;
+        normalizeRoute = window.AppCore.normalizeRoute;
+        loadStateFromKeys = window.AppCore.loadStateFromKeys;
+
+        function mergeList(primary = [], secondary = []) {
+            const result = [];
+            const seen = new Set();
+
+            [...primary, ...secondary].forEach(item => {
+                const signature = item && typeof item === 'object'
+                    ? (item.id ? `id:${item.id}` : JSON.stringify(item))
+                    : String(item);
+
+                if (!seen.has(signature)) {
+                    seen.add(signature);
+                    result.push(item);
+                }
+            });
+
+            return result;
+        }
+
+        function normalizeRoute(route = {}) {
+            return {
+                id: route.id || Date.now().toString(),
+                title: route.title || 'Новый маршрут',
+                date: route.date || new Date().toLocaleDateString('ru-RU'),
+                type: route.type || 'planned',
+                waypoints: Array.isArray(route.waypoints) ? route.waypoints : [],
+                notes: Array.isArray(route.notes) ? route.notes : [],
+                expenses: Array.isArray(route.expenses) ? route.expenses : [],
+                drafts: Array.isArray(route.drafts) ? route.drafts : [],
+                checklists: Array.isArray(route.checklists) ? route.checklists : [],
+                routeSegments: Array.isArray(route.routeSegments) ? route.routeSegments : [],
+                gpsPoints: Array.isArray(route.gpsPoints) ? route.gpsPoints : []
+            };
+        }
+
+        function mergeRoutes(primary = [], secondary = []) {
+            const routeMap = new Map();
+
+            [...secondary, ...primary].forEach(route => {
+                const normalized = normalizeRoute(route);
+                const existing = routeMap.get(normalized.id);
+
+                if (!existing) {
+                    routeMap.set(normalized.id, normalized);
+                    return;
+                }
+
+                routeMap.set(normalized.id, {
+                    ...existing,
+                    ...normalized,
+                    waypoints: mergeList(existing.waypoints, normalized.waypoints),
+                    notes: mergeList(existing.notes, normalized.notes),
+                    expenses: mergeList(existing.expenses, normalized.expenses),
+                    drafts: mergeList(existing.drafts, normalized.drafts),
+                    checklists: mergeList(existing.checklists, normalized.checklists),
+                    routeSegments: mergeList(existing.routeSegments, normalized.routeSegments),
+                    gpsPoints: mergeList(existing.gpsPoints, normalized.gpsPoints)
+                });
+            });
+
+            return Array.from(routeMap.values());
+        }
+
+        function normalizeState(rawState = {}) {
+            return {
+                routes: mergeRoutes(rawState.routes || []),
+                spontaneousNotes: mergeList(rawState.spontaneousNotes || []),
+                rituals: mergeList(rawState.rituals || []),
+                customTags: mergeList(rawState.customTags || [])
+            };
+        }
+
+        function loadStateFromKeys(keys) {
+            return keys.reduce((acc, key) => {
+                const saved = localStorage.getItem(key);
+                if (!saved) return acc;
+
+                const parsed = normalizeState(JSON.parse(saved));
+                return {
+                    routes: mergeRoutes(acc.routes, parsed.routes),
+                    spontaneousNotes: mergeList(acc.spontaneousNotes, parsed.spontaneousNotes),
+                    rituals: mergeList(acc.rituals, parsed.rituals),
+                    customTags: mergeList(acc.customTags, parsed.customTags)
+                };
+            }, { routes: [], spontaneousNotes: [], rituals: [], customTags: [] });
+        }
 
         // --- Storage Functions ---
         function loadState() {
             try {
-                const saved = localStorage.getItem(STORAGE_KEY);
-                if (saved) {
-                    state = JSON.parse(saved);
-                }
-                if (!state.customTags) state.customTags = [];
-                if (!state.spontaneousNotes) state.spontaneousNotes = [];
+                state = loadStateFromKeys([STORAGE_KEY, ...LEGACY_STORAGE_KEYS]);
+                saveState(false);
             } catch (e) {
                 console.error('Error loading state:', e);
-                state = { routes: [], spontaneousNotes: [], customTags: [] };
+                state = createEmptyState();
             }
         }
 
-        function saveState() {
+        function saveState(showMessage = true) {
             try {
                 localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-                showToast('Данные сохранены!');
+                if (showMessage) showToast('Данные сохранены!');
             } catch (e) {
                 console.error('Error saving state:', e);
                 showToast('Ошибка сохранения!');
@@ -228,7 +323,8 @@
         function resetAllData() {
             if (confirm('Вы уверены? Все данные будут удалены!')) {
                 localStorage.removeItem(STORAGE_KEY);
-                state = { routes: [], spontaneousNotes: [], customTags: [] };
+                clearLegacyStorage();
+                state = createEmptyState();
                 init();
                 showToast('Данные сброшены');
             }
@@ -942,17 +1038,12 @@
             if (!date) return;
             const type = prompt('Тип (planned/active/spontaneous):', 'planned');
             
-            const newRoute = {
+            const newRoute = normalizeRoute({
                 id: Date.now().toString(),
                 title,
                 date,
-                type: type || 'planned',
-                waypoints: [],
-                notes: [],
-                expenses: [],
-                routeSegments: [],
-                gpsPoints: []
-            };
+                type: type || 'planned'
+            });
             
             state.routes.unshift(newRoute);
             saveState();
