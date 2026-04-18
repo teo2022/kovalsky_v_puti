@@ -7,7 +7,8 @@
     let iosInstallModal = null;
 
     const ua = window.navigator.userAgent || '';
-    const isIos = /iphone|ipad|ipod/i.test(ua);
+    const platform = window.navigator.platform || '';
+    const isIos = /iphone|ipad|ipod/i.test(ua) || (/mac/i.test(platform) && window.navigator.maxTouchPoints > 1);
     const isSafari = isIos && /safari/i.test(ua) && !/crios|fxios|edgios|opr\//i.test(ua);
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
 
@@ -147,7 +148,7 @@
                 <ol class="ios-install-steps" data-ios-steps></ol>
                 <div class="ios-install-actions">
                     <button type="button" class="ios-install-button secondary" data-ios-close>Понятно</button>
-                    <button type="button" class="ios-install-button primary" data-ios-open>Открыть приложение</button>
+                    <button type="button" class="ios-install-button primary" data-ios-open>Перейти к приложению</button>
                 </div>
             </div>
         `;
@@ -182,6 +183,7 @@
         const modal = ensureIosInstallModal();
         const copy = modal.querySelector('[data-ios-copy]');
         const steps = modal.querySelector('[data-ios-steps]');
+        const openButton = modal.querySelector('[data-ios-open]');
 
         if (isSafari) {
             copy.textContent = 'На iOS установка запускается не кнопкой, а через системное меню Safari. После добавления на экран домой приложение будет открываться как отдельное веб-приложение.';
@@ -199,6 +201,8 @@
                     <div><strong>Выбери «На экран Домой»</strong><span>После этого значок появится на домашнем экране и приложение будет открываться отдельно от браузера.</span></div>
                 </li>
             `;
+            openButton.hidden = false;
+            openButton.textContent = 'Открыть приложение';
         } else {
             copy.textContent = 'Сейчас страница открыта не в Safari. На iPhone и iPad установка как приложения выполняется через Safari, поэтому сначала открой сайт там.';
             steps.innerHTML = `
@@ -215,6 +219,7 @@
                     <div><strong>Выбери «На экран Домой»</strong><span>После добавления значок появится на экране и приложение будет открываться без интерфейса браузера.</span></div>
                 </li>
             `;
+            openButton.hidden = true;
         }
 
         modal.hidden = false;
@@ -237,7 +242,6 @@
             return;
         }
 
-        const isIos = /iphone|ipad|ipod/i.test(window.navigator.userAgent);
         if (isIos) {
             showIosHint();
             return;

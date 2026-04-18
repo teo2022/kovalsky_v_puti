@@ -6,9 +6,9 @@ html, body {
     margin: 0;
     height: 100%;
     background:
-        radial-gradient(circle at top left, rgba(231, 105, 67, 0.24), transparent 26%),
-        radial-gradient(circle at top right, rgba(22, 124, 116, 0.18), transparent 30%),
-        linear-gradient(180deg, #f4eadc 0%, #f8f3eb 100%);
+        radial-gradient(circle at top left, rgba(231, 105, 67, 0.18), transparent 24%),
+        radial-gradient(circle at top right, rgba(22, 124, 116, 0.12), transparent 28%),
+        linear-gradient(180deg, #efe5d6 0%, #f7f2ea 100%);
     color: var(--text);
     font-family: "Manrope", sans-serif;
     overflow: hidden;
@@ -39,9 +39,9 @@ button {
 .phone-frame {
     width: min(100%, 430px);
     height: calc(100vh - 28px);
-    background: rgba(255, 249, 242, 0.7);
-    backdrop-filter: blur(14px);
-    border: 1px solid rgba(255, 255, 255, 0.65);
+    background: rgba(255, 250, 244, 0.96);
+    backdrop-filter: blur(18px);
+    border: 1px solid rgba(255, 255, 255, 0.92);
     border-radius: 38px;
     box-shadow: var(--shadow);
     overflow: hidden;
@@ -54,9 +54,9 @@ button {
     position: absolute;
     inset: 0;
     background:
-        radial-gradient(circle at 10% 0%, rgba(231, 105, 67, 0.22), transparent 28%),
-        radial-gradient(circle at 90% 10%, rgba(22, 124, 116, 0.18), transparent 32%),
-        linear-gradient(180deg, rgba(255,255,255,0.26), rgba(255,255,255,0));
+        radial-gradient(circle at 12% 0%, rgba(231, 105, 67, 0.12), transparent 24%),
+        radial-gradient(circle at 88% 8%, rgba(22, 124, 116, 0.1), transparent 28%),
+        linear-gradient(180deg, rgba(255,255,255,0.18), rgba(255,255,255,0));
     pointer-events: none;
 }
 
@@ -98,16 +98,16 @@ button {
     margin: 5px 0 0;
     color: var(--text-muted);
     font-size: 12px;
-    line-height: 1.35;
+    line-height: 1.45;
 }
 
 .header-action {
     min-width: 40px;
     height: 40px;
     border-radius: 14px;
-    background: rgba(255, 255, 255, 0.72);
-    border: 1px solid rgba(24, 50, 47, 0.08);
-    box-shadow: 0 10px 20px rgba(20, 28, 25, 0.06);
+    background: rgba(255, 255, 255, 0.96);
+    border: 1px solid rgba(24, 50, 47, 0.12);
+    box-shadow: 0 10px 20px rgba(20, 28, 25, 0.1);
     color: var(--text);
 }
 
@@ -130,9 +130,9 @@ button {
 .list-card,
 .sheet-card {
     background: var(--bg-elevated);
-    border: 1px solid rgba(255, 255, 255, 0.58);
+    border: 1px solid rgba(24, 50, 47, 0.09);
     backdrop-filter: blur(18px);
-    box-shadow: 0 16px 38px rgba(39, 38, 33, 0.08);
+    box-shadow: 0 14px 30px rgba(39, 38, 33, 0.1);
 }
 
 .hero-card {
@@ -148,7 +148,8 @@ button {
     display: inline-flex;
     padding: 6px 10px;
     border-radius: 999px;
-    background: rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.16);
+    border: 1px solid rgba(255,255,255,0.12);
     font-size: 10px;
     letter-spacing: 0.08em;
     text-transform: uppercase;
@@ -171,12 +172,16 @@ button {
 .metric-card {
     border-radius: 18px;
     padding: 12px;
+    background: rgba(255,255,255,0.98);
+    border: 1px solid rgba(24, 50, 47, 0.08);
+    box-shadow: 0 8px 18px rgba(24, 34, 31, 0.08);
 }
 
 .metric-label {
     color: var(--text-muted);
     font-size: 11px;
     margin-bottom: 5px;
+    font-weight: 700;
 }
 
 .metric-value {
@@ -195,14 +200,18 @@ button {
 
 .section-title {
     margin: 0;
-    font-size: 14px;
+    font-size: 15px;
     font-weight: 800;
+    color: var(--text);
 }
 
 .section-link {
     color: var(--accent-2);
     font-size: 12px;
     font-weight: 700;
+    padding: 6px 10px;
+    border-radius: 999px;
+    background: rgba(22, 124, 116, 0.1);
 }
 
 .routes-stack,
@@ -216,29 +225,34 @@ button {
 .route-card {
     border-radius: 22px;
     padding: 14px;
+    background: rgba(255, 255, 255, 0.98);
+    border: 1px solid rgba(24, 50, 47, 0.1);
 }
 
 .plan-step-card {
     border-radius: 20px;
     padding: 14px;
-    background: rgba(255, 255, 255, 0.62);
-    border: 1px solid rgba(24, 50, 47, 0.06);
+    background: rgba(255, 255, 255, 0.98);
+    border: 1px solid rgba(24, 50, 47, 0.1);
+    box-shadow: 0 10px 22px rgba(24, 34, 31, 0.06);
 }
 
 .plan-step-card.status-doing {
-    background: rgba(231, 105, 67, 0.08);
+    background: linear-gradient(180deg, rgba(255, 247, 242, 0.98), rgba(255, 255, 255, 0.98));
+    border-color: rgba(231, 105, 67, 0.3);
 }
 
 .plan-step-card.status-done {
-    background: rgba(22, 124, 116, 0.08);
+    background: linear-gradient(180deg, rgba(241, 251, 249, 0.98), rgba(255, 255, 255, 0.98));
+    border-color: rgba(22, 124, 116, 0.28);
 }
 
 .plan-result-box {
     margin-top: 10px;
     padding: 10px 12px;
     border-radius: 14px;
-    background: rgba(255, 255, 255, 0.72);
-    border: 1px solid rgba(24, 50, 47, 0.05);
+    background: rgba(244, 247, 246, 0.96);
+    border: 1px solid rgba(24, 50, 47, 0.09);
 }
 
 .plan-result-copy {
@@ -273,27 +287,39 @@ button {
     border-radius: 999px;
     font-size: 11px;
     font-weight: 700;
+    border: 1px solid transparent;
 }
 
 .status-planned {
-    background: rgba(41, 118, 255, 0.12);
-    color: #2457b8;
+    background: rgba(41, 118, 255, 0.14);
+    color: #1f58bc;
+    border-color: rgba(41, 118, 255, 0.22);
 }
 
 .status-active {
-    background: rgba(22, 124, 116, 0.12);
-    color: #116961;
+    background: rgba(22, 124, 116, 0.14);
+    color: #0f6961;
+    border-color: rgba(22, 124, 116, 0.22);
 }
 
 .status-spontaneous {
     background: rgba(231, 105, 67, 0.14);
-    color: #cd5937;
+    color: #bf4c2d;
+    border-color: rgba(231, 105, 67, 0.22);
+}
+
+.soft-pill,
+.chip {
+    background: rgba(24, 50, 47, 0.07);
+    color: var(--text);
+    border-color: rgba(24, 50, 47, 0.1);
 }
 
 .route-title {
     margin: 8px 0 4px;
     font-size: 17px;
     font-weight: 800;
+    color: var(--text);
 }
 
 .route-desc,
@@ -306,10 +332,10 @@ button {
 
 .inline-stat {
     min-width: calc(50% - 4px);
-    background: rgba(255, 255, 255, 0.64);
+    background: rgba(247, 249, 248, 0.98);
     border-radius: 15px;
     padding: 10px;
-    border: 1px solid rgba(24, 50, 47, 0.05);
+    border: 1px solid rgba(24, 50, 47, 0.08);
 }
 
 .inline-stat strong {
@@ -329,6 +355,8 @@ button {
     text-align: left;
     position: relative;
     overflow: hidden;
+    border: 1px solid rgba(24, 50, 47, 0.08);
+    box-shadow: 0 14px 28px rgba(24, 34, 31, 0.1);
 }
 
 .action-card.primary {
@@ -342,7 +370,7 @@ button {
 }
 
 .action-card.neutral {
-    background: rgba(255, 255, 255, 0.74);
+    background: rgba(255, 255, 255, 0.98);
 }
 
 .action-card-title {
@@ -361,10 +389,11 @@ button {
 .list-card {
     border-radius: 20px;
     padding: 12px;
+    background: rgba(255,255,255,0.98);
 }
 
 .list-item {
-    padding: 10px 0;
+    padding: 12px 0;
     display: flex;
     gap: 10px;
     align-items: flex-start;
@@ -382,6 +411,8 @@ button {
     align-items: center;
     justify-content: center;
     background: var(--accent-soft);
+    color: #9f4024;
+    border: 1px solid rgba(231, 105, 67, 0.16);
 }
 
 .list-body {
@@ -391,13 +422,15 @@ button {
 
 .list-title {
     margin: 0 0 4px;
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 800;
+    color: var(--text);
 }
 
 .list-meta {
     color: var(--text-muted);
     font-size: 11px;
+    font-weight: 600;
 }
 
 .list-note {
@@ -410,27 +443,32 @@ button {
     display: flex;
     overflow-x: auto;
     padding-bottom: 2px;
+    gap: 8px;
 }
 
 .tab-button {
     white-space: nowrap;
-    padding: 8px 12px;
+    padding: 9px 13px;
     border-radius: 999px;
-    background: rgba(255, 255, 255, 0.6);
+    background: rgba(255, 255, 255, 0.96);
     color: var(--text-muted);
-    border: 1px solid transparent;
+    border: 1px solid rgba(24, 50, 47, 0.1);
     font-weight: 700;
     font-size: 12px;
+    box-shadow: 0 6px 16px rgba(24, 34, 31, 0.05);
 }
 
 .tab-button.active {
     background: var(--surface-dark);
     color: var(--text-inverse);
+    border-color: rgba(24, 50, 47, 0.42);
+    box-shadow: 0 10px 24px rgba(24, 50, 47, 0.2);
 }
 
 .sheet-card {
     border-radius: 22px;
     padding: 14px;
+    background: rgba(255,255,255,0.98);
 }
 
 .bottom-nav {
@@ -439,7 +477,7 @@ button {
     right: 10px;
     bottom: calc(env(safe-area-inset-bottom, 0px) + 10px);
     border-radius: 20px;
-    background: rgba(21, 34, 31, 0.92);
+    background: rgba(15, 26, 24, 0.96);
     padding: 8px;
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -450,16 +488,18 @@ button {
 
 .nav-button {
     min-height: 48px;
-    color: rgba(248, 241, 231, 0.68);
+    color: rgba(248, 241, 231, 0.82);
     border-radius: 14px;
     display: grid;
     place-items: center;
     gap: 4px;
+    border: 1px solid transparent;
 }
 
 .nav-button.active {
-    background: rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.18);
     color: var(--text-inverse);
+    border-color: rgba(255,255,255,0.12);
 }
 
 .nav-icon {
@@ -486,11 +526,12 @@ button {
 .modal-sheet {
     width: min(100%, 430px);
     border-radius: 24px 24px 18px 18px;
-    background: #fffaf3;
+    background: rgba(255, 250, 243, 0.99);
     padding: 16px;
-    box-shadow: 0 24px 60px rgba(8, 11, 10, 0.22);
+    box-shadow: 0 24px 60px rgba(8, 11, 10, 0.28);
     max-height: 90vh;
     overflow-y: auto;
+    border: 1px solid rgba(24, 50, 47, 0.1);
 }
 
 .field-grid {
@@ -506,18 +547,19 @@ button {
 .field label {
     font-size: 11px;
     font-weight: 700;
-    color: var(--text-muted);
+    color: #41504b;
 }
 
 .field input,
 .field textarea,
 .field select {
     width: 100%;
-    border: 1px solid rgba(24, 50, 47, 0.08);
-    background: rgba(255, 255, 255, 0.88);
+    border: 1px solid rgba(24, 50, 47, 0.14);
+    background: rgba(255, 255, 255, 0.98);
     border-radius: 14px;
     padding: 11px 12px;
     color: var(--text);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.56);
 }
 
 .field textarea {
@@ -556,6 +598,9 @@ button {
     font-size: 11px;
     font-weight: 700;
     color: var(--accent-2);
+    padding: 6px 10px;
+    border-radius: 999px;
+    background: rgba(22, 124, 116, 0.08);
 }
 
 .checklist-item {
@@ -565,13 +610,14 @@ button {
     gap: 10px;
     padding: 10px 12px;
     border-radius: 16px;
-    background: rgba(255, 255, 255, 0.64);
-    border: 1px solid rgba(24, 50, 47, 0.06);
+    background: rgba(255, 255, 255, 0.98);
+    border: 1px solid rgba(24, 50, 47, 0.1);
     text-align: left;
 }
 
 .checklist-item.is-done {
-    background: rgba(22, 124, 116, 0.09);
+    background: rgba(238, 249, 247, 0.98);
+    border-color: rgba(22, 124, 116, 0.22);
 }
 
 .checkmark {
@@ -602,6 +648,7 @@ button {
     min-height: 44px;
     border-radius: 14px;
     font-weight: 800;
+    box-shadow: 0 12px 24px rgba(24, 34, 31, 0.08);
 }
 
 .btn-primary {
@@ -614,7 +661,7 @@ button {
 }
 
 .btn-secondary {
-    background: rgba(24, 50, 47, 0.08);
+    background: rgba(24, 50, 47, 0.12);
     color: var(--text);
 }
 
@@ -631,7 +678,7 @@ button {
     gap: 6px;
     padding: 6px 9px;
     border-radius: 999px;
-    background: rgba(24, 50, 47, 0.08);
+    background: rgba(24, 50, 47, 0.1);
     color: var(--text);
     font-size: 11px;
     font-weight: 700;
@@ -643,14 +690,15 @@ button {
     width: 18px;
     height: 18px;
     border-radius: 999px;
-    background: rgba(24, 50, 47, 0.08);
-    color: var(--text-muted);
+    background: rgba(24, 50, 47, 0.12);
+    color: #4e5d58;
     font-size: 12px;
     padding: 0;
 }
 
 .danger-link {
     color: #c9523a;
+    background: rgba(201, 82, 58, 0.1);
 }
 
 .markdown-box {
@@ -662,6 +710,7 @@ button {
     white-space: pre-wrap;
     font-size: 11px;
     line-height: 1.45;
+    border: 1px solid rgba(217, 245, 239, 0.08);
 }
 
 @media (max-width: 520px) {
