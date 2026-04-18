@@ -61,9 +61,11 @@
 
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-            navigator.serviceWorker.register(swUrl).catch(error => {
-                console.error('Не удалось зарегистрировать service worker', error);
-            });
+            navigator.serviceWorker.register(swUrl)
+                .then(registration => registration.update())
+                .catch(error => {
+                    console.error('Не удалось зарегистрировать service worker', error);
+                });
         });
     }
 })();

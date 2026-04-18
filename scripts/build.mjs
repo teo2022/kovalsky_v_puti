@@ -6,17 +6,20 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const rootDir = path.resolve(__dirname, '..');
 const distDir = path.join(rootDir, 'dist');
+const packageJsonPath = path.join(rootDir, 'package.json');
 
 const entriesToCopy = [
     'landing.html',
     'manifest.webmanifest',
-    'sw.js',
     'web-app.js',
     'assets',
     'v2'
 ];
 
 async function build() {
+    const packageJson = JSON.parse(await readFile(packageJsonPath, 'utf8'));
+    const buildVersion = `${packageJson.version}-${Date.now()}`;
+
     await rm(distDir, { recursive: true, force: true });
     await mkdir(distDir, { recursive: true });
 
@@ -26,10 +29,18 @@ async function build() {
         )
     );
 
+    const serviceWorker = await readFile(path.join(rootDir, 'sw.js'), 'utf8');
+    await writeFile(
+        path.join(distDir, 'sw.js'),
+        serviceWorker.replace('__APP_VERSION__', buildVersion),
+        'utf8'
+    );
+
     const landingHtml = await readFile(path.join(rootDir, 'landing.html'), 'utf8');
     await writeFile(path.join(distDir, 'index.html'), landingHtml, 'utf8');
 
     console.log(`Build completed: ${distDir}`);
+    console.log(`Service worker version: ${buildVersion}`);
 }
 
 build().catch(error => {
