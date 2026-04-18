@@ -46,6 +46,99 @@ function getSelectedRoute(state) {
     return state.routes.find(route => route.id === state.ui.selectedRouteId) || state.routes[0];
 }
 
+function canOpenWithoutRoute(captureType) {
+    return ['route', 'expense-category', 'expense-field', 'confirm-delete'].includes(captureType);
+}
+
+function askDeleteConfirmation(meta) {
+    store.openCapture('confirm-delete', meta);
+}
+
+function runDeleteAction(meta) {
+    if (!meta?.action) {
+        store.closeCapture();
+        return;
+    }
+
+    store.closeCapture();
+
+    if (meta.action === 'clear-demo') store.clearDemoContent();
+    if (meta.action === 'remove-expense-field') store.removeExpenseField(meta.categoryId, meta.fieldId);
+    if (meta.action === 'delete-expense-category') store.deleteExpenseCategory(meta.categoryId);
+    if (meta.action === 'delete-route') store.deleteRoute(meta.routeId);
+    if (meta.action === 'delete-moment') store.deleteMoment(meta.routeId, meta.itemId);
+    if (meta.action === 'delete-expense') store.deleteExpense(meta.routeId, meta.itemId);
+    if (meta.action === 'delete-waypoint') store.deleteWaypoint(meta.routeId, meta.itemId);
+    if (meta.action === 'delete-plan-step') store.deletePlanStep(meta.routeId, meta.itemId);
+    if (meta.action === 'delete-checklist') store.deleteChecklist(meta.routeId, meta.itemId);
+}
+
+function getDeleteModalContent(meta) {
+    const content = {
+        'clear-demo': {
+            title: 'Удалить ознакомительные данные',
+            badge: 'Система',
+            message: 'Ознакомительные маршруты, моменты, расходы, шаги плана и чеклисты будут удалены. Категории расходов и их поля сохранятся.',
+            confirmLabel: 'Удалить данные'
+        },
+        'remove-expense-field': {
+            title: 'Удалить поле категории',
+            badge: 'Расходы',
+            message: `Поле «${meta.fieldLabel || 'Без названия'}» будет удалено из категории расходов.`,
+            confirmLabel: 'Удалить поле'
+        },
+        'delete-expense-category': {
+            title: 'Удалить категорию расходов',
+            badge: 'Расходы',
+            message: `Категория «${meta.categoryLabel || 'Без названия'}» будет удалена вместе со своей схемой полей.`,
+            confirmLabel: 'Удалить категорию'
+        },
+        'delete-route': {
+            title: 'Удалить маршрут',
+            badge: 'Маршруты',
+            message: `Маршрут «${meta.title || 'Без названия'}» будет удалён со всеми моментами, расходами, планом и чеклистами.`,
+            confirmLabel: 'Удалить маршрут'
+        },
+        'delete-moment': {
+            title: 'Удалить момент',
+            badge: 'Маршрут',
+            message: `Момент «${meta.title || 'Без названия'}» будет удалён из маршрута.`,
+            confirmLabel: 'Удалить момент'
+        },
+        'delete-expense': {
+            title: 'Удалить расход',
+            badge: 'Маршрут',
+            message: `Расход «${meta.title || 'Без названия'}» будет удалён из бюджета маршрута.`,
+            confirmLabel: 'Удалить расход'
+        },
+        'delete-waypoint': {
+            title: 'Удалить точку',
+            badge: 'Маршрут',
+            message: `Точка «${meta.title || 'Без названия'}» будет удалена из маршрута.`,
+            confirmLabel: 'Удалить точку'
+        },
+        'delete-plan-step': {
+            title: 'Удалить шаг плана',
+            badge: 'План',
+            message: `Шаг «${meta.title || 'Без названия'}» будет удалён из плана маршрута.`,
+            confirmLabel: 'Удалить шаг'
+        },
+        'delete-checklist': {
+            title: 'Удалить чеклист',
+            badge: 'План',
+            message: `Чеклист «${meta.title || 'Без названия'}» будет удалён вместе со всеми пунктами.`,
+            confirmLabel: 'Удалить чеклист'
+        }
+    };
+
+    return content[meta?.action] || {
+        title: 'Подтвердить удаление',
+        badge: 'Система',
+        message: 'Это действие удалит выбранные данные.',
+        confirmLabel: 'Удалить'
+    };
+}
+
 function renderNoRoutesState() {
     return `
         <section class="screen-section">
@@ -138,6 +231,11 @@ function getPlanProgress(route) {
 }
 
 function buildHeader(state) {
+    if (state.ui.screen === 'dashboard' || state.ui.screen === 'route') {
+        headerEl.innerHTML = '';
+        return;
+    }
+
     const meta = screenMeta[state.ui.screen];
     const selectedRoute = getSelectedRoute(state);
 
@@ -162,6 +260,19 @@ function buildHeader(state) {
 }
 
 function renderDashboard(state) {
+    if (!state.routes.length) {
+        return `
+            <section class="screen-section">
+                <article class="hero-card">
+                    <span class="hero-kicker">Ковальский в пути / маршрутная система</span>
+                    <h2 class="hero-title">Начни с первого маршрута.</h2>
+                    <p class="page-subtitle" style="color: rgba(248, 241, 231, 0.8);">Ознакомительные данные очищены. Теперь приложение готово для работы уже с твоими собственными маршрутами и заметками.</p>
+                </article>
+            </section>
+            ${renderNoRoutesState()}
+        `;
+    }
+
     const metrics = [
         { label: 'Маршрутов', value: state.routes.length },
         { label: 'Моментов', value: countAllMoments(state.routes) },
@@ -232,7 +343,7 @@ function renderDashboard(state) {
                         </button>
                         <div class="item-actions item-actions-inline">
                             <button class="mini-action" data-action="edit-route" data-route-id="${route.id}">Ред.</button>
-                            ${state.routes.length > 1 ? `<button class="mini-action danger-link" data-action="delete-route" data-route-id="${route.id}">Удалить</button>` : ''}
+                            ${state.routes.length > 1 ? `<button class="mini-action danger-link" data-action="delete-route" data-route-id="${route.id}" data-title="${route.title}">Удалить</button>` : ''}
                         </div>
                     </div>
                 `).join('')}
@@ -366,7 +477,7 @@ function renderRouteTab(route, tab, state) {
                                     <div class="item-actions">
                                         <button class="mini-action" data-action="cycle-plan-step" data-item-id="${step.id}">${getPlanStepStatusLabel(step.status)}</button>
                                         <button class="mini-action" data-action="edit-plan-step" data-item-id="${step.id}">Ред.</button>
-                                        <button class="mini-action danger-link" data-action="delete-plan-step" data-item-id="${step.id}">Удалить</button>
+                                        <button class="mini-action danger-link" data-action="delete-plan-step" data-item-id="${step.id}" data-title="${step.title}">Удалить</button>
                                     </div>
                                 </div>
                                 ${step.note ? `<p class="route-desc" style="margin-top: 8px;">${step.note}</p>` : ''}
@@ -400,7 +511,7 @@ function renderRouteTab(route, tab, state) {
                                         </div>
                                         <div class="item-actions">
                                             <button class="mini-action" data-action="edit-checklist" data-item-id="${checklist.id}">Ред.</button>
-                                            <button class="mini-action danger-link" data-action="delete-checklist" data-item-id="${checklist.id}">Удалить</button>
+                                            <button class="mini-action danger-link" data-action="delete-checklist" data-item-id="${checklist.id}" data-title="${checklist.title}">Удалить</button>
                                         </div>
                                     </div>
                                     <div class="checklist-stack">
@@ -443,7 +554,7 @@ function renderRouteTab(route, tab, state) {
                             <strong>${formatCurrency(expense.amount)}</strong>
                             <div class="item-actions">
                                 <button class="mini-action" data-action="edit-expense" data-item-id="${expense.id}">Ред.</button>
-                                <button class="mini-action danger-link" data-action="delete-expense" data-item-id="${expense.id}">Удалить</button>
+                                <button class="mini-action danger-link" data-action="delete-expense" data-item-id="${expense.id}" data-title="${getExpenseDisplayTitle(expense, state)}">Удалить</button>
                             </div>
                         </div>
                     `;
@@ -521,14 +632,14 @@ function renderSettings(state) {
                                 <div class="compact-actions">
                                     <button class="section-link" data-action="edit-expense-category" data-category-id="${category.id}">Изм.</button>
                                     <button class="section-link" data-action="new-expense-field" data-category-id="${category.id}">+ Поле</button>
-                                    ${state.expenseCategories.length > 1 ? `<button class="section-link danger-link" data-action="delete-expense-category" data-category-id="${category.id}">Удалить</button>` : ''}
+                                    ${state.expenseCategories.length > 1 ? `<button class="section-link danger-link" data-action="delete-expense-category" data-category-id="${category.id}" data-category-label="${category.label}">Удалить</button>` : ''}
                                 </div>
                             </div>
                             <div class="field-chip-list">
                                 ${category.fields.map(field => `
                                     <span class="field-chip">
                                         ${field.label}
-                                        <button type="button" class="chip-remove" data-action="remove-expense-field" data-category-id="${category.id}" data-field-id="${field.id}">×</button>
+                                        <button type="button" class="chip-remove" data-action="remove-expense-field" data-category-id="${category.id}" data-field-id="${field.id}" data-field-label="${field.label}">×</button>
                                     </span>
                                 `).join('')}
                             </div>
@@ -546,20 +657,23 @@ function renderSettings(state) {
 function renderBottomNav(state) {
     const items = [
         ['dashboard', '◌', 'Дашборд'],
-        ['route', '✦', 'Маршрут'],
         ['library', '▣', 'Материалы'],
         ['settings', '☰', 'Система']
     ];
+    const activeScreen = state.ui.screen === 'route' ? 'dashboard' : state.ui.screen;
 
     navEl.innerHTML = items.map(([screen, icon, label]) => `
-        <button class="nav-button ${state.ui.screen === screen ? 'active' : ''}" data-screen="${screen}">
+        <button class="nav-button ${activeScreen === screen ? 'active' : ''}" data-screen="${screen}">
             <span class="nav-icon">${icon}</span>
             <span class="nav-label">${label}</span>
         </button>
     `).join('');
 
     navEl.querySelectorAll('[data-screen]').forEach(button => {
-        button.addEventListener('click', () => store.navigate(button.dataset.screen));
+        button.addEventListener('click', () => {
+            const screen = button.dataset.screen;
+            store.navigate(screen);
+        });
     });
 }
 
@@ -593,6 +707,11 @@ function renderModal(state) {
     }
 
     const route = getSelectedRoute(state);
+    if (!route && !canOpenWithoutRoute(type)) {
+        store.closeCapture();
+        window.alert('Сначала создай маршрут, чтобы добавлять моменты, шаги плана, расходы и чеклисты.');
+        return;
+    }
     modalRoot.innerHTML = `
         <div class="modal-backdrop" data-action="close-modal">
             <div class="modal-sheet" data-modal="sheet">
@@ -608,6 +727,13 @@ function renderModal(state) {
     });
 
     modalRoot.querySelector('[data-action="cancel-modal"]').addEventListener('click', () => store.closeCapture());
+
+    if (type === 'confirm-delete') {
+        modalRoot.querySelector('[data-action="confirm-delete"]').addEventListener('click', () => {
+            runDeleteAction(state.ui.captureMeta);
+        });
+        return;
+    }
 
     if (type === 'expense') {
         const categorySelect = modalRoot.querySelector('[name="category"]');
@@ -642,12 +768,37 @@ function renderModal(state) {
 
 function buildModal(type, route, state) {
     const meta = state.ui.captureMeta || {};
+    if (type === 'confirm-delete') {
+        const content = getDeleteModalContent(meta);
+
+        return `
+            <div class="section-header">
+                <h3 class="section-title">${content.title}</h3>
+                <span class="soft-pill">${content.badge}</span>
+            </div>
+            <p class="muted-copy" style="font-size: 13px; line-height: 1.45; margin-top: 10px;">${content.message}</p>
+            <div class="button-row">
+                <button type="button" class="btn btn-secondary" data-action="cancel-modal">Отмена</button>
+                <button type="button" class="btn btn-primary danger-button" data-action="confirm-delete">${content.confirmLabel}</button>
+            </div>
+        `;
+    }
+
+    const routeContext = route || {
+        title: 'Маршрут',
+        region: '',
+        moments: [],
+        expenses: [],
+        waypoints: [],
+        planSteps: [],
+        checklists: []
+    };
     const editingRoute = meta.routeId ? state.routes.find(item => item.id === meta.routeId) : null;
-    const editingMoment = meta.itemId ? route.moments.find(item => item.id === meta.itemId) : null;
-    const editingExpense = meta.itemId ? route.expenses.find(item => item.id === meta.itemId) : null;
-    const editingWaypoint = meta.itemId ? route.waypoints.find(item => item.id === meta.itemId) : null;
-    const editingPlanStep = meta.itemId ? route.planSteps.find(item => item.id === meta.itemId) : null;
-    const editingChecklist = meta.itemId ? route.checklists.find(item => item.id === meta.itemId) : null;
+    const editingMoment = meta.itemId ? routeContext.moments.find(item => item.id === meta.itemId) : null;
+    const editingExpense = meta.itemId ? routeContext.expenses.find(item => item.id === meta.itemId) : null;
+    const editingWaypoint = meta.itemId ? routeContext.waypoints.find(item => item.id === meta.itemId) : null;
+    const editingPlanStep = meta.itemId ? routeContext.planSteps.find(item => item.id === meta.itemId) : null;
+    const editingChecklist = meta.itemId ? routeContext.checklists.find(item => item.id === meta.itemId) : null;
     const editingCategory = meta.categoryId ? getExpenseCategory(state, meta.categoryId) : null;
     const expenseCategoryOptions = state.expenseCategories.map(category => `
         <option value="${category.id}" ${(editingExpense?.category || state.expenseCategories[0].id) === category.id ? 'selected' : ''}>${category.icon} ${category.label}</option>
@@ -672,7 +823,7 @@ function buildModal(type, route, state) {
         },
         moment: {
             title: editingMoment ? 'Редактировать момент' : 'Новый момент',
-            badge: route.title,
+            badge: routeContext.title,
             fields: `
                 <input type="hidden" name="itemId" value="${editingMoment?.id || ''}">
                 <div class="field"><label>Заголовок</label><input name="title" required placeholder="Что произошло или зацепило?" value="${editingMoment?.title || ''}"></div>
@@ -681,13 +832,13 @@ function buildModal(type, route, state) {
                     <option value="food" ${editingMoment?.category === 'food' ? 'selected' : ''}>Еда</option>
                     <option value="location" ${editingMoment?.category === 'location' ? 'selected' : ''}>Локация</option>
                 </select></div>
-                <div class="field"><label>Локация</label><input name="location" placeholder="${route.region}" value="${editingMoment?.location || ''}"></div>
+                <div class="field"><label>Локация</label><input name="location" placeholder="${routeContext.region}" value="${editingMoment?.location || ''}"></div>
                 <div class="field"><label>Текст</label><textarea name="content" required placeholder="Короткая мысль, эмоция, идея для поста или гида">${editingMoment?.content || ''}</textarea></div>
             `
         },
         expense: {
             title: editingExpense ? 'Редактировать расход' : 'Новый расход',
-            badge: route.title,
+            badge: routeContext.title,
             fields: `
                 <input type="hidden" name="itemId" value="${editingExpense?.id || ''}">
                 <div class="field"><label>Категория</label><select name="category">${expenseCategoryOptions}</select></div>
@@ -697,7 +848,7 @@ function buildModal(type, route, state) {
         },
         waypoint: {
             title: editingWaypoint ? 'Редактировать точку' : 'Новая точка',
-            badge: route.title,
+            badge: routeContext.title,
             fields: `
                 <input type="hidden" name="itemId" value="${editingWaypoint?.id || ''}">
                 <div class="field"><label>Название</label><input name="title" required placeholder="Кафе, перевал, стоянка" value="${editingWaypoint?.title || ''}"></div>
@@ -713,7 +864,7 @@ function buildModal(type, route, state) {
         },
         'plan-step': {
             title: editingPlanStep ? 'Редактировать шаг плана' : 'Новый шаг плана',
-            badge: route.title,
+            badge: routeContext.title,
             fields: `
                 <input type="hidden" name="itemId" value="${editingPlanStep?.id || ''}">
                 <div class="field"><label>Шаг</label><input name="title" required placeholder="Что нужно сделать по маршруту" value="${editingPlanStep?.title || ''}"></div>
@@ -741,7 +892,7 @@ function buildModal(type, route, state) {
         },
         checklist: {
             title: editingChecklist ? 'Редактировать чеклист' : 'Новый чеклист',
-            badge: route.title,
+            badge: routeContext.title,
             fields: `
                 <input type="hidden" name="itemId" value="${editingChecklist?.id || ''}">
                 <div class="field"><label>Название</label><input name="title" required placeholder="Что взять с собой или куда заехать" value="${editingChecklist?.title || ''}"></div>
@@ -851,13 +1002,24 @@ function getTabLabel(tab) {
 
 function bindMainEvents(state) {
     const route = getSelectedRoute(state);
+    const stopRouteOpen = event => {
+        event.preventDefault();
+        event.stopPropagation();
+    };
 
-    mainEl.querySelectorAll('[data-route-id]').forEach(button => {
+    mainEl.querySelectorAll('.route-open[data-route-id]').forEach(button => {
         button.addEventListener('click', () => store.selectRoute(button.dataset.routeId));
     });
 
     mainEl.querySelectorAll('[data-capture]').forEach(button => {
-        button.addEventListener('click', () => store.openCapture(button.dataset.capture));
+        button.addEventListener('click', () => {
+            const captureType = button.dataset.capture;
+            if (!state.routes.length && !canOpenWithoutRoute(captureType)) {
+                store.openCapture('route');
+                return;
+            }
+            store.openCapture(captureType);
+        });
     });
 
     mainEl.querySelectorAll('[data-route-tab]').forEach(button => {
@@ -873,7 +1035,9 @@ function bindMainEvents(state) {
     });
 
     mainEl.querySelectorAll('[data-action="clear-demo"]').forEach(button => {
-        button.addEventListener('click', () => store.clearDemoContent());
+        button.addEventListener('click', () => askDeleteConfirmation({
+            action: 'clear-demo'
+        }));
     });
 
     mainEl.querySelectorAll('[data-action="open-expense-settings"]').forEach(button => {
@@ -893,19 +1057,38 @@ function bindMainEvents(state) {
     });
 
     mainEl.querySelectorAll('[data-action="remove-expense-field"]').forEach(button => {
-        button.addEventListener('click', () => store.removeExpenseField(button.dataset.categoryId, button.dataset.fieldId));
+        button.addEventListener('click', () => askDeleteConfirmation({
+            action: 'remove-expense-field',
+            categoryId: button.dataset.categoryId,
+            fieldId: button.dataset.fieldId,
+            fieldLabel: button.dataset.fieldLabel
+        }));
     });
 
     mainEl.querySelectorAll('[data-action="delete-expense-category"]').forEach(button => {
-        button.addEventListener('click', () => store.deleteExpenseCategory(button.dataset.categoryId));
+        button.addEventListener('click', () => askDeleteConfirmation({
+            action: 'delete-expense-category',
+            categoryId: button.dataset.categoryId,
+            categoryLabel: button.dataset.categoryLabel
+        }));
     });
 
     mainEl.querySelectorAll('[data-action="edit-route"]').forEach(button => {
-        button.addEventListener('click', () => store.openCapture('route', { routeId: button.dataset.routeId }));
+        button.addEventListener('click', event => {
+            stopRouteOpen(event);
+            store.openCapture('route', { routeId: button.dataset.routeId });
+        });
     });
 
     mainEl.querySelectorAll('[data-action="delete-route"]').forEach(button => {
-        button.addEventListener('click', () => store.deleteRoute(button.dataset.routeId));
+        button.addEventListener('click', event => {
+            stopRouteOpen(event);
+            askDeleteConfirmation({
+                action: 'delete-route',
+                routeId: button.dataset.routeId,
+                title: button.dataset.title
+            });
+        });
     });
 
     mainEl.querySelectorAll('[data-action="edit-moment"]').forEach(button => {
@@ -913,7 +1096,12 @@ function bindMainEvents(state) {
     });
 
     mainEl.querySelectorAll('[data-action="delete-moment"]').forEach(button => {
-        button.addEventListener('click', () => store.deleteMoment(route.id, button.dataset.itemId));
+        button.addEventListener('click', () => askDeleteConfirmation({
+            action: 'delete-moment',
+            routeId: route.id,
+            itemId: button.dataset.itemId,
+            title: button.dataset.title
+        }));
     });
 
     mainEl.querySelectorAll('[data-action="edit-expense"]').forEach(button => {
@@ -921,7 +1109,12 @@ function bindMainEvents(state) {
     });
 
     mainEl.querySelectorAll('[data-action="delete-expense"]').forEach(button => {
-        button.addEventListener('click', () => store.deleteExpense(route.id, button.dataset.itemId));
+        button.addEventListener('click', () => askDeleteConfirmation({
+            action: 'delete-expense',
+            routeId: route.id,
+            itemId: button.dataset.itemId,
+            title: button.dataset.title
+        }));
     });
 
     mainEl.querySelectorAll('[data-action="edit-waypoint"]').forEach(button => {
@@ -929,7 +1122,12 @@ function bindMainEvents(state) {
     });
 
     mainEl.querySelectorAll('[data-action="delete-waypoint"]').forEach(button => {
-        button.addEventListener('click', () => store.deleteWaypoint(route.id, button.dataset.itemId));
+        button.addEventListener('click', () => askDeleteConfirmation({
+            action: 'delete-waypoint',
+            routeId: route.id,
+            itemId: button.dataset.itemId,
+            title: button.dataset.title
+        }));
     });
 
     mainEl.querySelectorAll('[data-action="edit-plan-step"]').forEach(button => {
@@ -937,7 +1135,12 @@ function bindMainEvents(state) {
     });
 
     mainEl.querySelectorAll('[data-action="delete-plan-step"]').forEach(button => {
-        button.addEventListener('click', () => store.deletePlanStep(route.id, button.dataset.itemId));
+        button.addEventListener('click', () => askDeleteConfirmation({
+            action: 'delete-plan-step',
+            routeId: route.id,
+            itemId: button.dataset.itemId,
+            title: button.dataset.title
+        }));
     });
 
     mainEl.querySelectorAll('[data-action="cycle-plan-step"]').forEach(button => {
@@ -949,7 +1152,12 @@ function bindMainEvents(state) {
     });
 
     mainEl.querySelectorAll('[data-action="delete-checklist"]').forEach(button => {
-        button.addEventListener('click', () => store.deleteChecklist(route.id, button.dataset.itemId));
+        button.addEventListener('click', () => askDeleteConfirmation({
+            action: 'delete-checklist',
+            routeId: route.id,
+            itemId: button.dataset.itemId,
+            title: button.dataset.title
+        }));
     });
 
     mainEl.querySelectorAll('[data-action="toggle-checklist-item"]').forEach(button => {
