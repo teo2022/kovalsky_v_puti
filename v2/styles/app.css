@@ -475,6 +475,7 @@ button {
 .quick-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
+    align-items: stretch;
 }
 
 .action-card {
@@ -486,6 +487,7 @@ button {
     overflow: hidden;
     border: 1px solid rgba(24, 50, 47, 0.08);
     box-shadow: 0 14px 28px rgba(24, 34, 31, 0.1);
+    min-width: 0;
 }
 
 .action-card.primary {
@@ -513,6 +515,13 @@ button {
     font-size: 11px;
     line-height: 1.35;
     opacity: 0.9;
+}
+
+.budget-amount {
+    flex: 0 0 auto;
+    align-self: center;
+    font-size: 14px;
+    color: var(--text);
 }
 
 .list-card {
@@ -581,14 +590,14 @@ button {
 }
 
 .tab-row {
-    display: flex;
-    overflow-x: auto;
-    padding-bottom: 2px;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 8px;
 }
 
 .tab-button {
     white-space: nowrap;
+    width: 100%;
     padding: 8px 11px;
     border-radius: 999px;
     background: rgba(255, 255, 255, 0.96);
@@ -908,23 +917,23 @@ button {
     }
 
     .section-header {
-        align-items: flex-start;
-        flex-direction: column;
+        align-items: center;
+        flex-direction: row;
+        flex-wrap: wrap;
     }
 
     .section-link {
-        width: 100%;
+        width: auto;
         justify-content: center;
         text-align: center;
     }
 
     .quick-grid {
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
     .route-topline,
-    .chip-row,
-    .tab-row {
+    .chip-row {
         gap: 4px;
     }
 
@@ -959,13 +968,82 @@ button {
         border-radius: 10px;
     }
 
-    .item-actions,
+    .item-actions {
+        width: auto;
+        flex-direction: column;
+        justify-content: flex-start;
+        margin-left: auto;
+        margin-top: 0;
+    }
+
     .item-actions-inline {
+        width: auto;
+        flex-direction: row;
+        justify-content: flex-end;
+        margin-left: auto;
+        margin-top: 8px;
+    }
+
+    .compact-actions {
+        width: 100%;
+        justify-content: flex-start;
+        flex-wrap: wrap;
+    }
+
+    .record-item {
+        display: grid;
+        grid-template-columns: 30px minmax(0, 1fr);
+        gap: 8px;
+    }
+
+    .record-item .list-badge {
+        grid-column: 1;
+        grid-row: 1;
+    }
+
+    .record-item .list-body {
+        grid-column: 2;
+        min-width: 0;
+    }
+
+    .record-actions {
+        grid-column: 2;
         width: 100%;
         flex-direction: row;
-        justify-content: flex-start;
+        justify-content: flex-end;
         margin-left: 0;
-        margin-top: 8px;
+        margin-top: 4px;
+    }
+
+    .budget-item {
+        display: grid;
+        grid-template-columns: 30px minmax(0, 1fr);
+        gap: 8px;
+    }
+
+    .budget-item .list-badge {
+        grid-column: 1;
+        grid-row: 1;
+    }
+
+    .budget-item .list-body {
+        grid-column: 2;
+        min-width: 0;
+    }
+
+    .budget-amount {
+        grid-column: 2;
+        justify-self: start;
+        margin-top: 2px;
+    }
+
+    .budget-actions {
+        grid-column: 2;
+        width: 100%;
+        flex-direction: row;
+        justify-content: flex-end;
+        margin-left: 0;
+        margin-top: 4px;
     }
 
     .mini-action {
@@ -1000,8 +1078,12 @@ button {
         grid-template-columns: 1fr;
     }
 
+    .tab-row {
+        gap: 6px;
+    }
+
     .tab-button {
-        padding: 7px 10px;
+        padding: 7px 8px;
         font-size: 11px;
     }
 

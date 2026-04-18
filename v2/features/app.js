@@ -20,8 +20,8 @@ const screenMeta = {
     },
     library: {
         eyebrow: 'Ковальский в пути',
-        title: 'Материалы и быстрый экспорт',
-        subtitle: 'Собранные записи, заготовки и шаблон публикации для следующего поста.'
+        title: 'Материалы маршрута',
+        subtitle: 'Собранные записи и заготовки по текущему маршруту.'
     },
     settings: {
         eyebrow: 'Ковальский в пути',
@@ -351,14 +351,14 @@ function renderDashboard(state) {
             </div>
             <article class="list-card">
                 ${recentMoments.map(moment => `
-                    <div class="list-item">
+                    <div class="list-item record-item">
                         <div class="list-badge">${getMomentIcon(moment.category)}</div>
                         <div class="list-body">
                             <p class="list-title">${moment.title}</p>
                             <div class="list-meta">${moment.routeTitle} · ${moment.location} · ${moment.createdAt}</div>
                             <div class="list-note">${moment.content}</div>
                         </div>
-                        <div class="item-actions">
+                        <div class="item-actions record-actions">
                             <button class="mini-action" data-action="edit-moment" data-route-id="${moment.routeId}" data-item-id="${moment.id}">Ред.</button>
                             <button class="mini-action danger-link" data-action="delete-moment" data-route-id="${moment.routeId}" data-item-id="${moment.id}" data-title="${moment.title}">Удалить</button>
                         </div>
@@ -405,7 +405,7 @@ function renderRoute(state) {
         </section>
         <section class="screen-section">
             <div class="tab-row">
-                ${['timeline', 'plan', 'budget', 'export'].map(tab => `
+                ${['timeline', 'plan', 'budget'].map(tab => `
                     <button class="tab-button ${state.ui.routeTab === tab ? 'active' : ''}" data-route-tab="${tab}">${getTabLabel(tab)}</button>
                 `).join('')}
             </div>
@@ -533,15 +533,15 @@ function renderRouteTab(route, tab, state) {
                 ${route.expenses.length ? route.expenses.map(expense => {
                     const summary = summarizeExpense(expense, state);
                     return `
-                        <div class="list-item">
+                        <div class="list-item budget-item">
                             <div class="list-badge">${summary.icon}</div>
                             <div class="list-body">
                                 <p class="list-title">${getExpenseDisplayTitle(expense, state)}</p>
                                 <div class="list-meta">${expense.createdAt}</div>
                                 ${summary.details ? `<div class="list-note">${summary.details}</div>` : ''}
                             </div>
-                            <strong>${formatCurrency(expense.amount)}</strong>
-                            <div class="item-actions">
+                            <strong class="budget-amount">${formatCurrency(expense.amount)}</strong>
+                            <div class="item-actions budget-actions">
                                 <button class="mini-action" data-action="edit-expense" data-item-id="${expense.id}">Ред.</button>
                                 <button class="mini-action danger-link" data-action="delete-expense" data-item-id="${expense.id}" data-title="${getExpenseDisplayTitle(expense, state)}">Удалить</button>
                             </div>
@@ -573,17 +573,9 @@ function renderLibrary(state) {
 
     return `
         <section class="screen-section">
-            <div class="sheet-card">
-                <div class="section-header">
-                    <h3 class="section-title">Экспорт по активному маршруту</h3>
-                    <button class="section-link" data-route-id="${route.id}">Открыть маршрут</button>
-                </div>
-                <div class="markdown-box">${buildExport(route, state)}</div>
-            </div>
-        </section>
-        <section class="screen-section">
             <div class="section-header">
                 <h3 class="section-title">Архив записей</h3>
+                <button class="section-link" data-route-id="${route.id}">Открыть маршрут</button>
             </div>
             <div class="cards-stack">
                 ${state.routes.flatMap(routeItem => routeItem.moments.map(moment => `
